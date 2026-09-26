@@ -41,6 +41,7 @@ yarn-error.log*
 .turbo/
 
 # Frontend build
+.vite-cache/
 dist/
 dist-ssr/
 *.local

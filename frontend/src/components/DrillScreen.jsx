@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { QUESTION_TIMEOUT_SECONDS } from '../utils/adaptiveEngine';
+import { QUESTION_TIMEOUT_SECONDS, FAST_THRESHOLD_SECONDS } from '../utils/adaptiveEngine';
 
 export default function DrillScreen({
   questionIndex,
@@ -104,7 +104,7 @@ export default function DrillScreen({
     });
   }, [isLocked, onSkip, question]);
 
-  // Keyboard shortcut listener: A/B/C/D or 1/2/3/4 to select, Enter to lock, S to skip
+  // Keyboard shortcut listener: A/B/C/D or 1/2/3/4 to select, Enter to lock
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (isLocked) return;
@@ -132,141 +132,200 @@ export default function DrillScreen({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isLocked, selectedOption, question.options.length, handleConfirm]);
 
-  const formattedTime = `00:${String(timeLeft).padStart(2, '0')}`;
-  const formattedIndex = `${String(questionIndex + 1).padStart(2, '0')} / ${String(totalQuestions).padStart(2, '0')}`;
-
   const optionLetters = ['A', 'B', 'C', 'D'];
+  const elapsed = QUESTION_TIMEOUT_SECONDS - timeLeft;
+  const isPaceFast = elapsed <= FAST_THRESHOLD_SECONDS;
 
   return (
-    <div className="console-wrapper">
-      {/* Top Bar */}
-      <header className="drill-topbar">
-        <div className="brand-group">
-          <span className="brand-symbol">■</span>
-          <span className="brand-name mono">QUANTA</span>
-        </div>
-
-        <div className="drill-mode-badge mono">SPEED DRILL</div>
-
-        <div className="question-counter mono" id="drill-counter">
-          {formattedIndex}
-        </div>
-      </header>
-
-      {/* Difficulty Telemetry Track */}
-      <div className="telemetry-bar">
-        <div className="difficulty-track-wrapper">
-          <span className="telemetry-label mono">DIFFICULTY</span>
-          <div className="difficulty-track">
-            <span className={`diff-node ${currentDifficulty === 'EASY' ? 'active-easy' : ''} mono`}>
-              EASY
-            </span>
-            <span className="diff-divider">─────────</span>
-            <span className={`diff-node ${currentDifficulty === 'MEDIUM' ? 'active-medium' : ''} mono`}>
-              MEDIUM
-            </span>
-            <span className="diff-divider">─────────</span>
-            <span className={`diff-node ${currentDifficulty === 'HARD' ? 'active-hard' : ''} mono`}>
-              HARD
-            </span>
+    <div className="dashboard-grid drill-active-grid">
+      {/* Left + Mid: Active Question Arena */}
+      <div className="grid-main-arena">
+        <div className="question-card">
+          {/* Header Row */}
+          <div className="q-card-header">
+            <div className="q-meta-group">
+              <span className="q-category-tag">{question.category}</span>
+              <span className={`q-difficulty-badge diff-${currentDifficulty.toLowerCase()}`}>
+                {currentDifficulty}
+              </span>
+            </div>
+            <div className="q-counter-tag mono">
+              QUESTION {String(questionIndex + 1).padStart(2, '0')} / {String(totalQuestions).padStart(2, '0')}
+            </div>
           </div>
-        </div>
 
-        {/* Countdown Timer */}
-        <div className="timer-wrapper">
-          <span className="timer-label mono">TIME REMAINING</span>
-          <div className={`countdown-display mono ${timeLeft <= 5 ? 'timer-critical' : ''}`} id="question-timer">
-            {formattedTime}
+          {/* Question Text */}
+          <h2 className="q-title" id="active-question-text">
+            {question.question}
+          </h2>
+
+          {/* Options Rows */}
+          <div className="q-options-container" role="radiogroup">
+            {question.options.map((opt, idx) => {
+              const letter = optionLetters[idx];
+              const isSelected = selectedOption === idx;
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  id={`option-btn-${letter}`}
+                  className={`q-option-pill ${isSelected ? 'option-selected' : ''}`}
+                  onClick={() => !isLocked && setSelectedOption(idx)}
+                  disabled={isLocked}
+                  role="radio"
+                  aria-checked={isSelected}
+                >
+                  <span className="option-letter mono">{letter}</span>
+                  <span className="option-text">{opt}</span>
+                  {isSelected && <span className="option-badge-check">✓ READY</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Bottom Controls */}
+          <div className="q-card-footer">
+            <div className="progress-dots-wrap">
+              {Array.from({ length: totalQuestions }).map((_, idx) => {
+                let stateClass = 'dot-unanswered';
+                if (idx < questionIndex) {
+                  const h = history[idx];
+                  stateClass = h?.isCorrect ? 'dot-correct' : 'dot-wrong';
+                } else if (idx === questionIndex) {
+                  stateClass = 'dot-current';
+                }
+
+                return (
+                  <span
+                    key={idx}
+                    className={`q-dot ${stateClass}`}
+                    title={`Question ${idx + 1}`}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="keyboard-tip mono">
+              [KEYS A–D TO SELECT &bull; ENTER TO LOCK]
+            </div>
+
+            <div className="q-actions-group">
+              <button
+                type="button"
+                id="skip-question-btn"
+                className="btn-skip"
+                onClick={handleSkipQuestion}
+                disabled={isLocked}
+              >
+                SKIP
+              </button>
+              <button
+                type="button"
+                id="lock-answer-btn"
+                className="btn-lock"
+                onClick={handleConfirm}
+                disabled={selectedOption === null || isLocked}
+              >
+                LOCK ANSWER →
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Question Body */}
-      <main className="question-container">
-        <div className="question-category-tag mono">
-          {question.category.toUpperCase()} &bull; {currentDifficulty}
-        </div>
+      {/* Right Column: Live Telemetry & Difficulty Ladder (Replacing Leaderboard) */}
+      <div className="grid-right-col">
+        <div className="section-card telemetry-sidebar-card">
+          <div className="section-header">
+            <h3 className="section-title">Adaptive Telemetry</h3>
+            <span className={`live-pulse-badge ${isPaceFast ? 'pulse-fast' : ''}`}>
+              {isPaceFast ? '⚡ FAST PACE' : '⏱ MODERATE'}
+            </span>
+          </div>
 
-        <h2 className="question-text" id="active-question-text">
-          {question.question}
-        </h2>
+          {/* Live Difficulty Ladder */}
+          <div className="ladder-container">
+            <span className="ladder-label">DIFFICULTY LADDER</span>
+            <div className="ladder-tiers">
+              <div className={`ladder-tier-row tier-hard ${currentDifficulty === 'HARD' ? 'tier-active' : ''}`}>
+                <div className="tier-indicator">▲</div>
+                <div className="tier-info">
+                  <span className="tier-name">HARD</span>
+                  <span className="tier-sub">Complex deductions</span>
+                </div>
+                {currentDifficulty === 'HARD' && <span className="tier-marker">CURRENT</span>}
+              </div>
 
-        {/* Options List */}
-        <div className="options-grid" role="radiogroup">
-          {question.options.map((opt, idx) => {
-            const letter = optionLetters[idx];
-            const isSelected = selectedOption === idx;
+              <div className={`ladder-tier-row tier-medium ${currentDifficulty === 'MEDIUM' ? 'tier-active' : ''}`}>
+                <div className="tier-indicator">●</div>
+                <div className="tier-info">
+                  <span className="tier-name">MEDIUM</span>
+                  <span className="tier-sub">Standard aptitude</span>
+                </div>
+                {currentDifficulty === 'MEDIUM' && <span className="tier-marker">CURRENT</span>}
+              </div>
 
-            return (
-              <button
-                key={idx}
-                type="button"
-                id={`option-btn-${letter}`}
-                className={`option-row ${isSelected ? 'selected' : ''}`}
-                onClick={() => !isLocked && setSelectedOption(idx)}
-                disabled={isLocked}
-                role="radio"
-                aria-checked={isSelected}
-              >
-                <span className="option-badge mono">{letter}</span>
-                <span className="option-label">{opt}</span>
-                {isSelected && <span className="option-checked-mark mono">SELECTED</span>}
-              </button>
-            );
-          })}
-        </div>
-      </main>
+              <div className={`ladder-tier-row tier-easy ${currentDifficulty === 'EASY' ? 'tier-active' : ''}`}>
+                <div className="tier-indicator">▼</div>
+                <div className="tier-info">
+                  <span className="tier-name">EASY</span>
+                  <span className="tier-sub">Fundamental speed</span>
+                </div>
+                {currentDifficulty === 'EASY' && <span className="tier-marker">CURRENT</span>}
+              </div>
+            </div>
+          </div>
 
-      {/* Bottom Control Bar */}
-      <footer className="drill-bottom-bar">
-        {/* Progress Dots */}
-        <div className="progress-dots" aria-label="Progress tracker">
-          {Array.from({ length: totalQuestions }).map((_, idx) => {
-            let stateClass = 'unanswered';
-            if (idx < questionIndex) {
-              const h = history[idx];
-              stateClass = h?.isCorrect ? 'dot-correct' : 'dot-wrong';
-            } else if (idx === questionIndex) {
-              stateClass = 'dot-current';
-            }
-
-            return (
-              <span
-                key={idx}
-                className={`dot-indicator ${stateClass}`}
-                title={`Question ${idx + 1}`}
+          {/* Pacing Speed Dial */}
+          <div className="pacing-gauge-box">
+            <div className="pacing-header">
+              <span>Pacing Gauge</span>
+              <span className="mono">{elapsed}s / 25s</span>
+            </div>
+            <div className="pacing-bar-track">
+              <div
+                className={`pacing-bar-fill ${elapsed > FAST_THRESHOLD_SECONDS ? 'pacing-slow' : 'pacing-fast'}`}
+                style={{ width: `${Math.min(100, (elapsed / QUESTION_TIMEOUT_SECONDS) * 100)}%` }}
               />
-            );
-          })}
-        </div>
+              <div
+                className="threshold-marker"
+                style={{ left: `${(FAST_THRESHOLD_SECONDS / QUESTION_TIMEOUT_SECONDS) * 100}%` }}
+                title="8.5s Fast Threshold"
+              >
+                <span>8.5s</span>
+              </div>
+            </div>
+            <div className="pacing-footer">
+              <span>Fast Threshold: &le; 8.5s</span>
+              <span>Timeout: 25s</span>
+            </div>
+          </div>
 
-        {/* Keyboard Helper */}
-        <div className="keyboard-helper mono">
-          [KEYS A&ndash;D TO SELECT &bull; ENTER TO LOCK]
+          {/* Answered Questions Telemetry mini-list */}
+          <div className="session-history-mini">
+            <span className="ladder-label">SESSION TRAIL</span>
+            <div className="mini-trail-list">
+              {history.length === 0 ? (
+                <div className="empty-trail">First question in progress...</div>
+              ) : (
+                history.map((h, i) => (
+                  <div key={i} className="mini-trail-item">
+                    <span className="mini-trail-q mono">Q{i + 1}</span>
+                    <span className={`mini-trail-tier diff-${h.difficulty.toLowerCase()}`}>
+                      {h.difficulty}
+                    </span>
+                    <span className="mini-trail-time mono">{h.responseTime.toFixed(1)}s</span>
+                    <span className={`mini-trail-res ${h.isCorrect ? 'res-pass' : 'res-fail'}`}>
+                      {h.isCorrect ? 'PASS' : 'FAIL'}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Actions */}
-        <div className="drill-actions">
-          <button
-            type="button"
-            id="skip-question-btn"
-            className="btn-secondary mono"
-            onClick={handleSkipQuestion}
-            disabled={isLocked}
-          >
-            SKIP
-          </button>
-          <button
-            type="button"
-            id="lock-answer-btn"
-            className="btn-primary mono"
-            onClick={handleConfirm}
-            disabled={selectedOption === null || isLocked}
-          >
-            LOCK ANSWER
-          </button>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

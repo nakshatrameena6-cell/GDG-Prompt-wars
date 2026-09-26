@@ -19,7 +19,6 @@ export default function TransitionScreen({ transitionData, onComplete }) {
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-  // Determine transition title
   let actionTitle = 'DIFFICULTY MAINTAINED';
   let badgeClass = 'tag-maintain';
 
@@ -35,64 +34,44 @@ export default function TransitionScreen({ transitionData, onComplete }) {
   const responseTimeText = `${responseTime.toFixed(1)}s`;
 
   return (
-    <div className="console-wrapper transition-wrapper">
-      {/* Top Header */}
-      <header className="drill-topbar">
-        <div className="brand-group">
-          <span className="brand-symbol">■</span>
-          <span className="brand-name mono">QUANTA</span>
+    <div className="transition-modal-overlay">
+      <div className="transition-dashboard-card">
+        <div className="transition-card-top">
+          <span className="trans-eyebrow">PERFORMANCE SIGNAL &bull; ADAPTIVE ENGINE</span>
+          <span className={`trans-pill ${badgeClass}`}>{actionTitle}</span>
         </div>
-        <div className="drill-mode-badge mono">CALIBRATING</div>
-      </header>
 
-      <main className="transition-content">
-        <div className="transition-card">
-          <div className="transition-header-eyebrow mono">
-            PERFORMANCE SIGNAL &bull; REAL-TIME TELEMETRY
-          </div>
-
-          <div className="transition-metrics-row">
-            <div className="metric-box">
-              <span className="metric-label mono">ACCURACY</span>
-              <span className={`metric-val mono ${isCorrect ? 'text-success' : 'text-danger'}`}>
-                {accuracyText}
-              </span>
-            </div>
-
-            <div className="metric-box">
-              <span className="metric-label mono">RESPONSE TIME</span>
-              <span className="metric-val mono highlight-lime">
-                {responseTimeText}
-              </span>
-            </div>
-          </div>
-
-          <div className="transition-divider"></div>
-
-          <div className="transition-status-section">
-            <span className={`transition-badge mono ${badgeClass}`}>
-              {actionTitle}
+        <div className="trans-metrics-grid">
+          <div className="trans-metric-tile">
+            <span className="trans-label">ACCURACY</span>
+            <span className={`trans-val ${isCorrect ? 'val-success' : 'val-danger'} mono`}>
+              {accuracyText}
             </span>
-
-            <div className="difficulty-shift mono">
-              <span className={`shift-tier ${previousDifficulty.toLowerCase()}`}>
-                {previousDifficulty}
-              </span>
-              <span className="shift-arrow">→</span>
-              <span className={`shift-tier ${nextDifficulty.toLowerCase()} highlight-tier`}>
-                {nextDifficulty}
-              </span>
-            </div>
-
-            <p className="transition-reason mono">{reason}</p>
           </div>
 
-          {/* Micro countdown bar */}
-          <div className="transition-progress-bar">
-            <div className="transition-progress-fill"></div>
+          <div className="trans-metric-tile">
+            <span className="trans-label">RESPONSE TIME</span>
+            <span className="trans-val val-time mono">{responseTimeText}</span>
           </div>
         </div>
-      </main>
+
+        <div className="trans-shift-display">
+          <div className="shift-pill-group">
+            <span className={`shift-chip diff-${previousDifficulty.toLowerCase()}`}>
+              {previousDifficulty}
+            </span>
+            <span className="shift-arrow-icon">&rarr;</span>
+            <span className={`shift-chip diff-${nextDifficulty.toLowerCase()} chip-active`}>
+              {nextDifficulty}
+            </span>
+          </div>
+          <p className="trans-reason">{reason}</p>
+        </div>
+
+        <div className="trans-progress-track">
+          <div className="trans-progress-fill"></div>
+        </div>
+      </div>
     </div>
   );
 }
