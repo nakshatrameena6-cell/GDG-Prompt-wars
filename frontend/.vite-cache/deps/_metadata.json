@@ -1,0 +1,46 @@
+{
+  "hash": "fc711b8e",
+  "configHash": "1dbf699a",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "d124cc94",
+  "optimized": {
+    "react": {
+      "src": "../../../../truth-frame/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "ea23cb89",
+      "needsInterop": true
+    },
+    "react-dom": {
+      "src": "../../../../truth-frame/node_modules/react-dom/index.js",
+      "file": "react-dom.js",
+      "fileHash": "b5cb6b58",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../../../truth-frame/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "4da8abe4",
+      "needsInterop": true
+    },
+    "react/jsx-runtime": {
+      "src": "../../../../truth-frame/node_modules/react/jsx-runtime.js",
+      "file": "react_jsx-runtime.js",
+      "fileHash": "33a596e9",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../../../truth-frame/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "3da5ad93",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-RZFC3N5H": {
+      "file": "chunk-RZFC3N5H.js"
+    },
+    "chunk-KG5OWKD5": {
+      "file": "chunk-KG5OWKD5.js"
+    }
+  }
+}
