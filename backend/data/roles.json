@@ -1,0 +1,42 @@
+[
+  {
+    "id": "full_stack_developer",
+    "title": "Full Stack Developer",
+    "description": "Builds complete web applications bridging frontend UI, server-side APIs, and databases.",
+    "required_skills": {
+      "javascript": 3,
+      "react": 3,
+      "nodejs": 3,
+      "rest_api": 3,
+      "html_css": 2,
+      "sql": 3,
+      "git": 2,
+      "python": 3
+    }
+  },
+  {
+    "id": "data_analyst",
+    "title": "Data Analyst",
+    "description": "Extracts insights from structured data, performs statistical analysis, and creates executive visualizations.",
+    "required_skills": {
+      "python": 3,
+      "sql": 3,
+      "pandas": 3,
+      "data_analysis": 3,
+      "data_visualization": 3,
+      "git": 2
+    }
+  },
+  {
+    "id": "frontend_developer",
+    "title": "Frontend Developer",
+    "description": "Specializes in building modern, performant, and interactive browser applications.",
+    "required_skills": {
+      "html_css": 3,
+      "javascript": 4,
+      "react": 4,
+      "typescript": 3,
+      "git": 2
+    }
+  }
+]

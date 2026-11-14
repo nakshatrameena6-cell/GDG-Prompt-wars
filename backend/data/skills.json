@@ -1,0 +1,107 @@
+[
+  {
+    "id": "html_css",
+    "name": "HTML & CSS",
+    "category": "Frontend",
+    "description": "Foundational web markup, semantics, and stylesheet styling.",
+    "prerequisites": []
+  },
+  {
+    "id": "javascript",
+    "name": "JavaScript",
+    "category": "Frontend",
+    "description": "Core dynamic programming language of the modern web.",
+    "prerequisites": []
+  },
+  {
+    "id": "react",
+    "name": "React",
+    "category": "Frontend",
+    "description": "Declarative component-based UI library for interactive web applications.",
+    "prerequisites": ["javascript", "html_css"]
+  },
+  {
+    "id": "typescript",
+    "name": "TypeScript",
+    "category": "Frontend",
+    "description": "Typed superset of JavaScript providing static types and maintainability.",
+    "prerequisites": ["javascript"]
+  },
+  {
+    "id": "nodejs",
+    "name": "Node.js",
+    "category": "Backend",
+    "description": "Asynchronous event-driven JavaScript runtime for server-side development.",
+    "prerequisites": ["javascript"]
+  },
+  {
+    "id": "rest_api",
+    "name": "REST APIs",
+    "category": "Backend",
+    "description": "Design principles, routing, and HTTP conventions for web services.",
+    "prerequisites": ["nodejs"]
+  },
+  {
+    "id": "python",
+    "name": "Python",
+    "category": "Backend",
+    "description": "Versatile programming language for web backends, scripting, and data science.",
+    "prerequisites": []
+  },
+  {
+    "id": "sql",
+    "name": "SQL & Relational Databases",
+    "category": "Database",
+    "description": "Structured Query Language for querying and managing relational schemas.",
+    "prerequisites": []
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "category": "Database",
+    "description": "Document-oriented NoSQL database system for flexible JSON storage.",
+    "prerequisites": []
+  },
+  {
+    "id": "git",
+    "name": "Git & GitHub",
+    "category": "DevOps",
+    "description": "Distributed version control and collaboration workflows.",
+    "prerequisites": []
+  },
+  {
+    "id": "docker",
+    "name": "Docker",
+    "category": "DevOps",
+    "description": "Containerization platform for isolated application environments.",
+    "prerequisites": ["git"]
+  },
+  {
+    "id": "pandas",
+    "name": "Pandas",
+    "category": "Data",
+    "description": "Data analysis and tabular data manipulation library for Python.",
+    "prerequisites": ["python"]
+  },
+  {
+    "id": "data_analysis",
+    "name": "Data Analysis",
+    "category": "Data",
+    "description": "Exploratory data analysis, aggregation, and statistical metrics.",
+    "prerequisites": ["python", "pandas"]
+  },
+  {
+    "id": "data_visualization",
+    "name": "Data Visualization",
+    "category": "Data",
+    "description": "Visual storytelling and chart design with Python visualization tools.",
+    "prerequisites": ["python"]
+  },
+  {
+    "id": "machine_learning",
+    "name": "Machine Learning",
+    "category": "AI",
+    "description": "Foundational supervised and unsupervised algorithms for predictive systems.",
+    "prerequisites": ["python", "pandas"]
+  }
+]

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "res-html-1",
+    "skill_id": "html_css",
+    "title": "MDN Learn HTML",
+    "url": "https://developer.mozilla.org/en-US/docs/Learn/HTML",
+    "type": "documentation",
+    "level": 1
+  },
+  {
+    "id": "res-html-2",
+    "skill_id": "html_css",
+    "title": "MDN Learn CSS Layouts",
+    "url": "https://developer.mozilla.org/en-US/docs/Learn/CSS",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-js-1",
+    "skill_id": "javascript",
+    "title": "MDN JavaScript Guide",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-js-2",
+    "skill_id": "javascript",
+    "title": "The Modern JavaScript Tutorial",
+    "url": "https://javascript.info/",
+    "type": "tutorial",
+    "level": 3
+  },
+  {
+    "id": "res-react-1",
+    "skill_id": "react",
+    "title": "Quick Start - React Official Docs",
+    "url": "https://react.dev/learn",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-react-2",
+    "skill_id": "react",
+    "title": "React API Reference",
+    "url": "https://react.dev/reference/react",
+    "type": "documentation",
+    "level": 4
+  },
+  {
+    "id": "res-ts-1",
+    "skill_id": "typescript",
+    "title": "TypeScript Handbook - Introduction",
+    "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-ts-2",
+    "skill_id": "typescript",
+    "title": "TypeScript Handbook - Everyday Types",
+    "url": "https://www.typescriptlang.org/docs/handbook/2/basic-types.html",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-node-1",
+    "skill_id": "nodejs",
+    "title": "Node.js Learning Path",
+    "url": "https://nodejs.org/en/learn",
+    "type": "tutorial",
+    "level": 2
+  },
+  {
+    "id": "res-node-2",
+    "skill_id": "nodejs",
+    "title": "Node.js API Documentation",
+    "url": "https://nodejs.org/docs/latest/api/",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-api-1",
+    "skill_id": "rest_api",
+    "title": "MDN REST Overview",
+    "url": "https://developer.mozilla.org/en-US/docs/Glossary/REST",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-api-2",
+    "skill_id": "rest_api",
+    "title": "REST API Tutorial & Best Practices",
+    "url": "https://restfulapi.net/",
+    "type": "guide",
+    "level": 3
+  },
+  {
+    "id": "res-py-1",
+    "skill_id": "python",
+    "title": "Official Python 3 Tutorial",
+    "url": "https://docs.python.org/3/tutorial/",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-py-2",
+    "skill_id": "python",
+    "title": "Python Documentation Index",
+    "url": "https://www.python.org/doc/",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-sql-1",
+    "skill_id": "sql",
+    "title": "PostgreSQL Tutorial",
+    "url": "https://www.postgresql.org/docs/current/tutorial.html",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-sql-2",
+    "skill_id": "sql",
+    "title": "SQLite Documentation",
+    "url": "https://www.sqlite.org/docs.html",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-mongo-1",
+    "skill_id": "mongodb",
+    "title": "MongoDB Manual - Introduction",
+    "url": "https://www.mongodb.com/docs/manual/introduction/",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-mongo-2",
+    "skill_id": "mongodb",
+    "title": "MongoDB Node.js Driver Guide",
+    "url": "https://www.mongodb.com/docs/drivers/node/current/",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-git-1",
+    "skill_id": "git",
+    "title": "Pro Git Book - Getting Started",
+    "url": "https://git-scm.com/book/en/v2",
+    "type": "book",
+    "level": 1
+  },
+  {
+    "id": "res-git-2",
+    "skill_id": "git",
+    "title": "Git Reference Documentation",
+    "url": "https://git-scm.com/docs",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-docker-1",
+    "skill_id": "docker",
+    "title": "Docker Get Started Guide",
+    "url": "https://docs.docker.com/get-started/",
+    "type": "tutorial",
+    "level": 2
+  },
+  {
+    "id": "res-docker-2",
+    "skill_id": "docker",
+    "title": "Docker Official Guides",
+    "url": "https://docs.docker.com/guides/",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-pandas-1",
+    "skill_id": "pandas",
+    "title": "Pandas Getting Started Tutorials",
+    "url": "https://pandas.pydata.org/docs/getting_started/index.html",
+    "type": "tutorial",
+    "level": 2
+  },
+  {
+    "id": "res-pandas-2",
+    "skill_id": "pandas",
+    "title": "Pandas User Guide",
+    "url": "https://pandas.pydata.org/docs/user_guide/index.html",
+    "type": "documentation",
+    "level": 3
+  },
+  {
+    "id": "res-da-1",
+    "skill_id": "data_analysis",
+    "title": "Python Standard Library - Statistics",
+    "url": "https://docs.python.org/3/library/statistics.html",
+    "type": "documentation",
+    "level": 2
+  },
+  {
+    "id": "res-da-2",
+    "skill_id": "data_analysis",
+    "title": "Scikit-Learn Getting Started",
+    "url": "https://scikit-learn.org/stable/getting_started.html",
+    "type": "guide",
+    "level": 3
+  },
+  {
+    "id": "res-viz-1",
+    "skill_id": "data_visualization",
+    "title": "Matplotlib Quick Start Guide",
+    "url": "https://matplotlib.org/stable/users/explain/quick_start.html",
+    "type": "tutorial",
+    "level": 2
+  },
+  {
+    "id": "res-viz-2",
+    "skill_id": "data_visualization",
+    "title": "Seaborn Tutorial & Gallery",
+    "url": "https://seaborn.pydata.org/tutorial.html",
+    "type": "tutorial",
+    "level": 3
+  },
+  {
+    "id": "res-ml-1",
+    "skill_id": "machine_learning",
+    "title": "Scikit-Learn Basic Machine Learning Tutorial",
+    "url": "https://scikit-learn.org/stable/tutorial/basic/tutorial.html",
+    "type": "tutorial",
+    "level": 3
+  },
+  {
+    "id": "res-ml-2",
+    "skill_id": "machine_learning",
+    "title": "Scikit-Learn User Guide",
+    "url": "https://scikit-learn.org/stable/user_guide.html",
+    "type": "documentation",
+    "level": 4
+  }
+]
