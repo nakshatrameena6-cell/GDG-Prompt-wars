@@ -12,6 +12,9 @@ import ResultScreen from './components/ResultScreen';
 import ProfileView from './components/ProfileView';
 import GapsView from './components/GapsView';
 import RoadmapView from './components/RoadmapView';
+import AssessmentView from './components/AssessmentView';
+import MentorView from './components/MentorView';
+import AgentsView from './components/AgentsView';
 import PlaceholderView from './components/PlaceholderView';
 import {
   fetchCatalog,
@@ -477,18 +480,24 @@ export default function App() {
             )}
 
             {screen === 'MAIN' && activeNav === 'assessment' && (
-              <PlaceholderView
-                viewType="assessment"
-                onLaunchDrill={handleStartDrill}
+              <AssessmentView
+                profileId={appState?.profile?.id}
+                onAssessmentComplete={(updatedState) => setAppState(updatedState)}
               />
             )}
 
             {screen === 'MAIN' && activeNav === 'mentor' && (
-              <PlaceholderView viewType="mentor" />
+              <MentorView
+                profileId={appState?.profile?.id}
+                state={appState}
+              />
             )}
 
             {screen === 'MAIN' && activeNav === 'agents' && (
-              <PlaceholderView viewType="agents" />
+              <AgentsView
+                profileId={appState?.profile?.id}
+                state={appState}
+              />
             )}
 
             {/* Speed Drill Screens (Untouched components) */}

@@ -60,8 +60,11 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
                     <h3 className="module-title">{module.skill_name}</h3>
                     <div className="module-meta-row">
                       <span className="cat-pill">{module.category}</span>
+                      <span className={`priority-tag priority-${(module.priority || 'medium').toLowerCase()}`}>
+                        Priority: {module.priority || 'MEDIUM'}
+                      </span>
                       <span className="level-target-text mono">
-                        Target: Level {module.required_level} (Current: Level {module.effective_level})
+                        Req: L{module.required_level} | Claimed: L{module.claimed_level} | Verified: {module.verified_level !== null && module.verified_level !== undefined ? `L${module.verified_level}` : 'Unverified'}
                       </span>
                     </div>
                   </div>
