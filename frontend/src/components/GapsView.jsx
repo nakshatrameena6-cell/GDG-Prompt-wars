@@ -109,18 +109,18 @@ export default function GapsView({ state }) {
         </div>
 
         <div className="table-responsive">
-          <table className="gaps-table">
+          <table className="gaps-table" aria-label="Skill Gaps and Verification Matrix">
             <thead>
               <tr>
-                <th>Competency</th>
-                <th>Domain</th>
-                <th className="text-center">Claimed Level</th>
-                <th className="text-center">Verified Level</th>
-                <th className="text-center">Effective</th>
-                <th className="text-center">Required</th>
-                <th className="text-center">Gap Deficit</th>
-                <th style={{ width: '180px' }}>Readiness</th>
-                <th className="text-center">Status</th>
+                <th scope="col">Competency</th>
+                <th scope="col">Domain</th>
+                <th scope="col" className="text-center">Claimed Level</th>
+                <th scope="col" className="text-center">Verified Level</th>
+                <th scope="col" className="text-center">Effective</th>
+                <th scope="col" className="text-center">Required</th>
+                <th scope="col" className="text-center">Gap Deficit</th>
+                <th scope="col" style={{ width: '180px' }}>Readiness</th>
+                <th scope="col" className="text-center">Status</th>
               </tr>
             </thead>
             <tbody>

@@ -388,6 +388,11 @@ export default function ProfileView({
                     className="rating-slider"
                     value={currentVal}
                     onChange={(e) => handleSliderChange(skill.id, e.target.value)}
+                    aria-label={`Claimed proficiency level for ${skill.name}`}
+                    aria-valuemin="0"
+                    aria-valuemax="5"
+                    aria-valuenow={currentVal}
+                    aria-valuetext={getLevelLabel(currentVal)}
                   />
                   <div className="slider-ticks">
                     <span>0</span>

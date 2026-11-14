@@ -89,7 +89,7 @@ async def limit_payload_size(request: Request, call_next):
         try:
             if int(content_length) > MAX_REQUEST_SIZE:
                 return JSONResponse(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    status_code=getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413),
                     content={"status": "error", "message": "Request payload exceeds allowed limit of 1MB."},
                 )
         except ValueError:
@@ -110,6 +110,9 @@ def check_mentor_rate_limit(client_key: str) -> bool:
     timestamps.append(now)
     _mentor_rate_limits[client_key] = timestamps
     return True
+
+def reset_rate_limits():
+    _mentor_rate_limits.clear()
 
 # Data loader helpers
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -434,6 +437,7 @@ async def demo_seed():
 @app.post("/api/demo/reset")
 async def demo_reset():
     reset_db()
+    reset_rate_limits()
     return {
         "status": "success",
         "message": "Database reset successfully."

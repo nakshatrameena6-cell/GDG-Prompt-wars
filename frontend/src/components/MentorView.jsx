@@ -105,7 +105,7 @@ export default function MentorView({ profileId, state }) {
 
       {/* Chat Messages Conversation Stream */}
       <div className="mentor-conversation-card section-card">
-        <div className="messages-stream">
+        <div className="messages-stream" aria-live="polite" aria-relevant="additions" role="log">
           {messages.map((m, idx) => (
             <div key={idx} className={`message-bubble-wrapper ${m.sender}`}>
               <div className="message-sender-tag">
@@ -130,13 +130,13 @@ export default function MentorView({ profileId, state }) {
           ))}
 
           {loading && (
-            <div className="message-bubble-wrapper mentor">
+            <div className="message-bubble-wrapper mentor" role="status" aria-label="AI mentor is typing">
               <div className="message-sender-tag">🤖 QUANTA AI MENTOR</div>
               <div className="message-content">
                 <div className="typing-indicator-row">
-                  <span className="typing-dot"></span>
-                  <span className="typing-dot"></span>
-                  <span className="typing-dot"></span>
+                  <span className="typing-dot" aria-hidden="true"></span>
+                  <span className="typing-dot" aria-hidden="true"></span>
+                  <span className="typing-dot" aria-hidden="true"></span>
                   <span className="typing-label">Analyzing profile telemetry and formulating advice...</span>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function MentorView({ profileId, state }) {
         </div>
 
         {/* Input Bar */}
-        <div className="mentor-input-row">
+        <div className="mentor-input-row" role="form" aria-label="Mentor message form">
           <input
             type="text"
             className="form-input mentor-input"
@@ -155,12 +155,14 @@ export default function MentorView({ profileId, state }) {
             onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
             placeholder="Ask mentor for technical advice, interview tactics, or roadmap guidance..."
             disabled={loading}
+            aria-label="Message inquiry for AI mentor"
           />
           <button
             type="button"
             className="btn-primary"
             onClick={() => handleSend()}
             disabled={loading || !query.trim()}
+            aria-label="Send message to mentor"
           >
             <span>Send ➔</span>
           </button>

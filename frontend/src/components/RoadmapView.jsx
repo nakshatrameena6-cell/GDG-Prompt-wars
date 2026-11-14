@@ -97,6 +97,7 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
                       className="btn-mark-complete"
                       onClick={() => onCompleteModule(module.id)}
                       disabled={isCompleting}
+                      aria-label={`Mark ${module.skill_name} module as complete`}
                     >
                       {isCompleting ? 'Updating...' : 'Mark Complete ✓'}
                     </button>
@@ -140,6 +141,7 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
                         rel="noopener noreferrer"
                         className="resource-card-link"
                         title={res.title}
+                        aria-label={`Official documentation: ${res.title} (Level ${res.level}, opens in new tab)`}
                       >
                         <div className="res-link-header">
                           <span className="res-type-tag">{res.type}</span>

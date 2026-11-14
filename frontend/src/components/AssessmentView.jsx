@@ -239,14 +239,14 @@ export default function AssessmentView({ profileId, onAssessmentComplete }) {
     <div className="technical-assessment-container">
       <div className="section-card assessment-runner-card">
         {/* Top Progress Track */}
-        <div className="assessment-progress-wrapper">
+        <div className="assessment-progress-wrapper" aria-live="polite">
           <div className="progress-label-row">
             <span className="progress-step-text">
               Question <strong>{currentIndex + 1}</strong> of {questions.length}
             </span>
             <span className="progress-pct-text mono">{progressPercent}% Completed</span>
           </div>
-          <div className="assessment-progress-bar">
+          <div className="assessment-progress-bar" role="progressbar" aria-valuenow={progressPercent} aria-valuemin="0" aria-valuemax="100">
             <div
               className="assessment-progress-fill"
               style={{ width: `${progressPercent}%` }}
@@ -270,19 +270,23 @@ export default function AssessmentView({ profileId, onAssessmentComplete }) {
         </div>
 
         <div className="question-body-box">
-          <h3 className="question-text">{currentQ?.question}</h3>
+          <h3 className="question-text" id="current-question-text">{currentQ?.question}</h3>
 
-          <div className="options-selection-grid">
+          <div className="options-selection-grid" role="radiogroup" aria-labelledby="current-question-text">
             {currentQ?.options.map((optText, optIdx) => {
               const isSelected = selectedAnswers[currentQ.id] === optIdx;
+              const letter = ['A', 'B', 'C', 'D'][optIdx];
               return (
                 <button
                   key={optIdx}
                   type="button"
                   className={`assessment-option-btn ${isSelected ? 'selected' : ''}`}
                   onClick={() => handleSelectOption(optIdx)}
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={`Option ${letter}: ${optText}`}
                 >
-                  <span className="option-indicator mono">{['A', 'B', 'C', 'D'][optIdx]}</span>
+                  <span className="option-indicator mono" aria-hidden="true">{letter}</span>
                   <span className="option-text">{optText}</span>
                 </button>
               );
