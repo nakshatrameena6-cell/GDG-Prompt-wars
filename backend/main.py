@@ -1,5 +1,7 @@
 import json
 import logging
+import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from contextlib import asynccontextmanager
@@ -77,6 +79,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+MAX_REQUEST_SIZE = 1_048_576  # 1 MB
+
+@app.middleware("http")
+async def limit_payload_size(request: Request, call_next):
+    """Protects server against excessively large request bodies (DoS prevention)."""
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_REQUEST_SIZE:
+                return JSONResponse(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    content={"status": "error", "message": "Request payload exceeds allowed limit of 1MB."},
+                )
+        except ValueError:
+            pass
+    return await call_next(request)
+
+
+# In-memory rate limiting for expensive AI endpoints
+_mentor_rate_limits = defaultdict(list)
+MAX_MENTOR_REQUESTS_PER_MINUTE = 20
+
+def check_mentor_rate_limit(client_key: str) -> bool:
+    now = time.time()
+    cutoff = now - 60.0
+    timestamps = [t for t in _mentor_rate_limits[client_key] if t > cutoff]
+    if len(timestamps) >= MAX_MENTOR_REQUESTS_PER_MINUTE:
+        return False
+    timestamps.append(now)
+    _mentor_rate_limits[client_key] = timestamps
+    return True
+
 # Data loader helpers
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
@@ -123,11 +157,11 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
-    """Fallback handler for unexpected server errors."""
+    """Fallback handler for unexpected server errors preventing internal implementation detail leakage."""
     logger.exception(f"Unhandled server error: {exc}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"status": "error", "message": str(exc) or "Internal server error"},
+        content={"status": "error", "message": "An unexpected server error occurred. Please try again later."},
     )
 
 
@@ -481,6 +515,13 @@ async def submit_assessment(payload: AssessmentSubmitRequest):
             "explanation": q_def.get("explanation"),
         })
 
+    if not processed_responses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No recognized question IDs found in assessment submission."
+        )
+
+    total = len(processed_responses)
     accuracy_pct = round((correct_count / total) * 100.0, 1) if total > 0 else 0.0
 
     # 1. Record attempt and responses
@@ -527,10 +568,11 @@ async def submit_assessment(payload: AssessmentSubmitRequest):
 @app.get("/api/agents/timeline")
 async def get_timeline(profile_id: Optional[int] = None, limit: int = 50):
     """
-    Returns actual backend-persisted agent execution events.
+    Returns actual backend-persisted agent execution events with bounded pagination.
     """
+    safe_limit = max(1, min(limit, 200))
     profile = resolve_profile(profile_id)
-    events = get_agent_events(profile["id"], limit=limit)
+    events = get_agent_events(profile["id"], limit=safe_limit)
     return {
         "status": "success",
         "count": len(events),
@@ -540,10 +582,18 @@ async def get_timeline(profile_id: Optional[int] = None, limit: int = 50):
 
 @app.post("/mentor/chat")
 @app.post("/api/mentor/chat")
-async def mentor_chat(payload: MentorQueryRequest):
+async def mentor_chat(payload: MentorQueryRequest, request: Request):
     """
-    Triggers the AI Mentor agent on-demand with contextual student data.
+    Triggers the AI Mentor agent on-demand with contextual student data and rate-limit guard.
     """
+    client_ip = request.client.host if request.client else "unknown"
+    rate_key = f"{client_ip}_{payload.profile_id or 1}"
+    if not check_mentor_rate_limit(rate_key):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded. Please wait a moment before sending another inquiry."
+        )
+
     profile = resolve_profile(payload.profile_id)
     user_skills = get_user_skills(profile["id"])
     context = {

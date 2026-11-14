@@ -18,14 +18,17 @@ def get_db_path() -> Path:
 
 
 def get_connection() -> sqlite3.Connection:
-    conn = sqlite3.connect(get_db_path())
+    conn = sqlite3.connect(get_db_path(), timeout=10.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
 def init_db():
-    """Initializes SQLite schema on startup."""
+    """Initializes SQLite schema and performance indices on startup."""
     with get_connection() as conn:
         conn.executescript("""
         CREATE TABLE IF NOT EXISTS profiles (
@@ -86,6 +89,12 @@ def init_db():
             details TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE INDEX IF NOT EXISTS idx_assessment_attempts_profile ON assessment_attempts(profile_id);
+        CREATE INDEX IF NOT EXISTS idx_assessment_responses_attempt ON assessment_responses(attempt_id);
+        CREATE INDEX IF NOT EXISTS idx_assessment_responses_profile ON assessment_responses(profile_id);
+        CREATE INDEX IF NOT EXISTS idx_agent_events_profile ON agent_events(profile_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_skill_ratings_profile ON skill_ratings(profile_id);
         """)
         try:
             conn.execute("ALTER TABLE profiles ADD COLUMN interests TEXT DEFAULT ''")

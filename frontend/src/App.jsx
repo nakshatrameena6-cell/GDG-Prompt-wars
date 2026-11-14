@@ -251,6 +251,17 @@ export default function App() {
     setScreen('MAIN');
   };
 
+  // Keyboard accessibility: close mobile sidebar with Escape
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
   // Real state values
   const totalModules = appState?.roadmap?.length || 0;
   const doneModules = appState?.roadmap?.filter(m => m.status === 'done').length || 0;
@@ -319,9 +330,14 @@ export default function App() {
 
   return (
     <div className="template-viewport">
-      {/* Toast Notification */}
+      {/* Skip to Content for Screen Readers & Keyboard Users */}
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
+
+      {/* Toast Notification with Accessible Announcement */}
       {toastMessage && (
-        <div className="toast-notification">
+        <div className="toast-notification" role="status" aria-live="polite">
           <span>✓ {toastMessage}</span>
         </div>
       )}
@@ -332,11 +348,15 @@ export default function App() {
           <div
             className="sidebar-backdrop"
             onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
           />
         )}
 
         {/* Modern SaaS Left Sidebar */}
-        <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
+        <aside
+          className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}
+          aria-label="Sidebar Navigation"
+        >
           <div className="sidebar-top">
             <div className="sidebar-brand-block">
               <IconLogo />
@@ -348,12 +368,13 @@ export default function App() {
                 type="button"
                 className="mobile-close-btn"
                 onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close navigation menu"
               >
                 <IconClose />
               </button>
             </div>
 
-            <nav className="sidebar-nav">
+            <nav className="sidebar-nav" aria-label="Main Navigation">
               {navItems.map((item) => {
                 const isActive = activeNav === item.id && screen === 'MAIN';
                 return (
@@ -361,13 +382,14 @@ export default function App() {
                     key={item.id}
                     type="button"
                     className={`sidebar-nav-btn ${isActive ? 'active' : ''}`}
+                    aria-current={isActive ? 'page' : undefined}
                     onClick={() => {
                       setActiveNav(item.id);
                       setScreen('MAIN');
                       setMobileMenuOpen(false);
                     }}
                   >
-                    <span className="nav-icon-wrap">{item.icon}</span>
+                    <span className="nav-icon-wrap" aria-hidden="true">{item.icon}</span>
                     <span className="nav-label-text">{item.label}</span>
                   </button>
                 );
@@ -408,15 +430,16 @@ export default function App() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="dashboard-main-panel">
+        <main id="main-content" className="dashboard-main-panel" tabIndex="-1">
           {/* Top Bar Navigation */}
-          <header className="dashboard-topbar">
+          <header className="dashboard-topbar" role="banner">
             <div className="topbar-left">
               <button
                 type="button"
                 className="mobile-hamburger-btn"
                 onClick={() => setMobileMenuOpen(true)}
-                title="Open Navigation Menu"
+                aria-label="Open navigation menu"
+                aria-expanded={mobileMenuOpen}
               >
                 <IconMenu />
               </button>
