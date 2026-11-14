@@ -32,6 +32,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             goal TEXT NOT NULL,
+            interests TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -54,6 +55,10 @@ def init_db():
             UNIQUE(profile_id, skill_id)
         );
         """)
+        try:
+            conn.execute("ALTER TABLE profiles ADD COLUMN interests TEXT DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass
         conn.commit()
 
 
@@ -69,12 +74,12 @@ def reset_db():
     init_db()
 
 
-def create_profile(name: str, goal: str) -> Dict[str, Any]:
+def create_profile(name: str, goal: str, interests: Optional[str] = None) -> Dict[str, Any]:
     with get_connection() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO profiles (name, goal) VALUES (?, ?)",
-            (name, goal)
+            "INSERT INTO profiles (name, goal, interests) VALUES (?, ?, ?)",
+            (name, goal, interests or "")
         )
         conn.commit()
         profile_id = cursor.lastrowid
@@ -97,7 +102,12 @@ def get_default_profile() -> Optional[Dict[str, Any]]:
         return dict(row)
 
 
-def update_profile(profile_id: int, name: Optional[str] = None, goal: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def update_profile(
+    profile_id: int,
+    name: Optional[str] = None,
+    goal: Optional[str] = None,
+    interests: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     updates = []
     params = []
     if name is not None:
@@ -106,6 +116,9 @@ def update_profile(profile_id: int, name: Optional[str] = None, goal: Optional[s
     if goal is not None:
         updates.append("goal = ?")
         params.append(goal)
+    if interests is not None:
+        updates.append("interests = ?")
+        params.append(interests)
 
     if not updates:
         return get_profile(profile_id)
@@ -206,10 +219,15 @@ def seed_sample_student() -> Dict[str, Any]:
     Seeds database with Sample Student:
     Name: 'Sample Student'
     Goal: 'full_stack_developer'
+    Interests: 'Web application architecture, RESTful API design, database systems'
     Skills: Python 3, SQL 3, html_css 2
     """
     reset_db()
-    profile = create_profile(name="Sample Student", goal="full_stack_developer")
+    profile = create_profile(
+        name="Sample Student",
+        goal="full_stack_developer",
+        interests="Web application architecture, RESTful API design, database systems"
+    )
     p_id = profile["id"]
 
     # Seed ratings: Python 3, SQL 3, html_css 2

@@ -11,6 +11,7 @@ from fastapi.responses import JSONResponse
 from backend.config import settings
 from backend.core.gap import analyze_gaps
 from backend.core.planner import generate_roadmap, diff_goals
+from backend.core.profile_analyst import generate_profile_summary
 from backend.db import (
     init_db,
     reset_db,
@@ -164,10 +165,20 @@ def build_state_for_profile(profile: Dict[str, Any]) -> Dict[str, Any]:
         completed_skill_ids=completed_skills
     )
 
+    # Generate deterministic profile intelligence summary
+    profile_summary = generate_profile_summary(
+        profile=profile,
+        role=role,
+        user_skills=user_skills,
+        gap_report=gap_report,
+        skills_catalog=SKILLS_CATALOG,
+    )
+
     return {
         "status": "success",
         "profile": profile,
         "role": role,
+        "profile_summary": profile_summary,
         "skills": gap_report["items"],
         "gap_skills": gap_report["gap_skills"],
         "readiness": gap_report["readiness"],
@@ -231,7 +242,12 @@ async def update_user_profile(payload: ProfileUpdateRequest, id: Optional[int] =
             detail=f"Invalid career goal '{payload.goal}'."
         )
 
-    updated_profile = update_profile(p_id, name=payload.name, goal=payload.goal)
+    updated_profile = update_profile(
+        p_id,
+        name=payload.name,
+        goal=payload.goal,
+        interests=payload.interests
+    )
     if payload.skills:
         batch_set_skills(p_id, payload.skills)
 

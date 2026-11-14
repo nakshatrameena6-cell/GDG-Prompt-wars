@@ -3,6 +3,7 @@ import { previewGoal } from '../api';
 
 export default function ProfileView({
   profile,
+  profileSummary,
   catalog,
   userSkills,
   onUpdateProfile,
@@ -11,6 +12,7 @@ export default function ProfileView({
   loading
 }) {
   const [name, setName] = useState(profile?.name || '');
+  const [interests, setInterests] = useState(profile?.interests || '');
   const [selectedGoal, setSelectedGoal] = useState(profile?.goal || 'full_stack_developer');
   const [ratings, setRatings] = useState({});
   const [goalPreview, setGoalPreview] = useState(null);
@@ -20,6 +22,7 @@ export default function ProfileView({
   useEffect(() => {
     if (profile) {
       setName(profile.name || '');
+      setInterests(profile.interests || '');
       setSelectedGoal(profile.goal || 'full_stack_developer');
     }
   }, [profile]);
@@ -58,6 +61,7 @@ export default function ProfileView({
     if (onUpdateProfile) {
       await onUpdateProfile({
         name,
+        interests,
         goal: selectedGoal,
         skills: ratings
       });
@@ -71,6 +75,11 @@ export default function ProfileView({
       await onGoalChange(selectedGoal);
       setGoalPreview(null);
     }
+  };
+
+  const handleCancelPreview = () => {
+    setSelectedGoal(profile?.goal || 'full_stack_developer');
+    setGoalPreview(null);
   };
 
   return (
@@ -105,7 +114,7 @@ export default function ProfileView({
 
         {saveSuccess && (
           <div className="alert-success-banner">
-            ✓ Profile and skill ratings updated successfully!
+            ✓ Profile, interests, and skill ratings updated successfully!
           </div>
         )}
 
@@ -139,19 +148,42 @@ export default function ProfileView({
           </div>
         </div>
 
+        <div className="form-group" style={{ marginTop: '16px' }}>
+          <label className="form-label" htmlFor="student-interests-input">
+            Technical Interests & Focus Areas
+          </label>
+          <input
+            id="student-interests-input"
+            type="text"
+            className="form-input"
+            value={interests}
+            onChange={(e) => setInterests(e.target.value)}
+            placeholder="e.g. Full-stack web architecture, API engineering, relational databases"
+          />
+        </div>
+
         {/* Goal Change Preview Card (POST /goal/preview demonstration) */}
         {goalPreview && (
           <div className="goal-preview-card">
             <div className="preview-header">
               <span className="badge-preview">Goal Change Impact Preview</span>
-              <button
-                type="button"
-                className="btn-apply-goal"
-                onClick={handleApplyGoal}
-                disabled={loading}
-              >
-                Apply Switch to {catalog?.roles?.find(r => r.id === selectedGoal)?.title} →
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleCancelPreview}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn-apply-goal"
+                  onClick={handleApplyGoal}
+                  disabled={loading}
+                >
+                  Confirm Switch to {catalog?.roles?.find(r => r.id === selectedGoal)?.title} →
+                </button>
+              </div>
             </div>
 
             <div className="preview-metrics-row">
@@ -198,6 +230,66 @@ export default function ProfileView({
         )}
       </div>
 
+      {/* Profile Analyst Intelligence Card (Deterministic Zero-LLM) */}
+      {profileSummary && (
+        <div className="section-card profile-summary-card">
+          <div className="section-header">
+            <div>
+              <span className="card-eyebrow">Profile Intelligence</span>
+              <h3 className="section-title">Deterministic Profile Analyst Summary</h3>
+            </div>
+            <span className="subhead-meta">Zero-LLM Phase 1 Foundation</span>
+          </div>
+
+          <div className="summary-details-grid">
+            <div className="summary-item">
+              <span className="summary-label">Target Career</span>
+              <span className="summary-value font-bold">{profileSummary.selected_career?.title}</span>
+            </div>
+
+            <div className="summary-item">
+              <span className="summary-label">Focus Interests</span>
+              <span className="summary-value">{profileSummary.interests}</span>
+            </div>
+
+            <div className="summary-item">
+              <span className="summary-label">Claimed Strengths</span>
+              <div className="tags-wrap" style={{ marginTop: '4px' }}>
+                {profileSummary.claimed_strengths?.length > 0 ? (
+                  profileSummary.claimed_strengths.map(s => (
+                    <span key={s.skill_id} className="tag tag-kept">
+                      {s.skill_name} (L{s.claimed_level})
+                    </span>
+                  ))
+                ) : (
+                  <span className="unverified-text">No skills claimed at Level 3+ yet</span>
+                )}
+              </div>
+            </div>
+
+            <div className="summary-item">
+              <span className="summary-label">Primary Gaps</span>
+              <div className="tags-wrap" style={{ marginTop: '4px' }}>
+                {profileSummary.main_skill_gaps?.length > 0 ? (
+                  profileSummary.main_skill_gaps.map(g => (
+                    <span key={g.skill_id} className="tag tag-removed">
+                      {g.skill_name} (-{g.gap})
+                    </span>
+                  ))
+                ) : (
+                  <span className="tag tag-kept">All required competencies fulfilled</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="profile-observation-box">
+            <span className="obs-label">TRANSPARENT PROFILE OBSERVATION:</span>
+            <p className="obs-text">{profileSummary.observation}</p>
+          </div>
+        </div>
+      )}
+
       {/* Skills Self-Claimed Ratings Section (0-5 Rating Sliders) */}
       <div className="section-card skills-ratings-card">
         <div className="section-header">
@@ -240,4 +332,3 @@ export default function ProfileView({
     </div>
   );
 }
-

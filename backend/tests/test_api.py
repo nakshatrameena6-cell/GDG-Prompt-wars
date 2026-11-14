@@ -68,6 +68,15 @@ def test_sample_student_acceptance():
     readiness = data["readiness"]
     assert 20 <= readiness <= 60
 
+    # Profile Intelligence summary verification
+    assert "profile_summary" in data
+    summary = data["profile_summary"]
+    assert len(summary["interests"]) > 0
+    assert summary["selected_career"]["id"] == "full_stack_developer"
+    assert len(summary["claimed_strengths"]) >= 2
+    assert len(summary["main_skill_gaps"]) >= 4
+    assert len(summary["observation"]) > 0
+
     # Roadmap sequencing and lock states
     roadmap = data["roadmap"]
     skills_in_order = [m["skill_id"] for m in roadmap]
@@ -192,3 +201,23 @@ def test_demo_reset_and_seed():
     data = res_seed.json()
     assert data["status"] == "success"
     assert data["state"]["profile"]["name"] == "Sample Student"
+
+
+def test_update_profile_interests_and_ratings():
+    """Test updating profile interests, name, and skill ratings."""
+    update_payload = {
+        "name": "Jane Doe",
+        "interests": "Machine learning systems, distributed computing",
+        "skills": {
+            "python": 4,
+            "sql": 4,
+            "git": 3
+        }
+    }
+    res = client.post("/api/profile", json=update_payload)
+    assert res.status_code == 200
+    state = res.json()
+    assert state["profile"]["name"] == "Jane Doe"
+    assert state["profile"]["interests"] == "Machine learning systems, distributed computing"
+    assert state["profile_summary"]["interests"] == "Machine learning systems, distributed computing"
+

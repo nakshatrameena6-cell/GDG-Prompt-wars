@@ -11,6 +11,7 @@ class ErrorResponse(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     name: Optional[str] = None
     goal: Optional[str] = None
+    interests: Optional[str] = None
     skills: Optional[Dict[str, int]] = None
 
 

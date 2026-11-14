@@ -451,6 +451,7 @@ export default function App() {
             {screen === 'MAIN' && activeNav === 'profile' && (
               <ProfileView
                 profile={appState?.profile}
+                profileSummary={appState?.profile_summary}
                 catalog={catalog}
                 userSkills={appState?.skills?.reduce((acc, s) => {
                   acc[s.skill_id] = { claimed_level: s.claimed, verified_level: s.verified };
