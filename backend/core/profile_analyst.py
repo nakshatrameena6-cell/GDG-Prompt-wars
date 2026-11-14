@@ -107,3 +107,4 @@ def generate_profile_summary(
         "main_skill_gaps": main_skill_gaps,
         "observation": obs,
     }
+

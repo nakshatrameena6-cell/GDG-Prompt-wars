@@ -77,3 +77,4 @@ def test_profile_summary_fallback_interests():
 
     assert len(summary["interests"]) > 0
     assert summary["selected_career"]["id"] == "data_analyst"
+
