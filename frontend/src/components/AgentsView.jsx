@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { fetchAgentTimeline } from '../api';
+import { IconUser, IconCompass, IconShield, IconSearch, IconRoadmap, IconMentor, IconRefresh } from './Icons';
 
 export default function AgentsView({ profileId, state }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [eventFilter, setEventFilter] = useState('ALL');
 
   const loadTimeline = () => {
     setLoading(true);
@@ -28,60 +30,77 @@ export default function AgentsView({ profileId, state }) {
   const agentsRoster = [
     {
       name: "Profile Analyst",
-      role: "Interprets student interests, claimed skills, and strengths.",
+      role: "Interprets student interests, claimed competencies, and qualitative observations.",
       status: "Active",
-      badge: "Diagnostic"
+      badge: "Diagnostic",
+      icon: <IconUser />
     },
     {
       name: "Career Matcher",
-      role: "Evaluates fit against target roles and highlights prerequisite risks.",
+      role: "Evaluates fit against target career catalogues and quantifies readiness deficits.",
       status: "Active",
-      badge: "Intelligence"
+      badge: "Intelligence",
+      icon: <IconCompass />
     },
     {
       name: "Skill Auditor",
-      role: "Audits empirical assessment verification vs unverified claims.",
+      role: "Audits empirical test performance against self-reported ratings and flags overconfidence.",
       status: "Active",
-      badge: "Verification"
+      badge: "Verification",
+      icon: <IconShield />
     },
     {
       name: "Weakness Detective",
-      role: "Investigates response time telemetry, difficulty, and error tags.",
+      role: "Investigates response latency telemetry, difficulty tiers, and error tag attributions.",
       status: "Active",
-      badge: "Root-Cause"
+      badge: "Root-Cause",
+      icon: <IconSearch />
     },
     {
       name: "Curriculum Planner",
-      role: "Sequences roadmap modules and enforces strict prerequisite DAG.",
+      role: "Sequences roadmap modules in topological DAG order and assigns adaptive priority.",
       status: "Active",
-      badge: "Planning"
+      badge: "Planning",
+      icon: <IconRoadmap />
     },
     {
       name: "AI Mentor",
-      role: "Provides contextual placement coaching and interview preparation.",
+      role: "Synthesizes multi-agent signals to deliver strategic placement coaching and advice.",
       status: "Standby (On-Demand)",
-      badge: "Guidance"
+      badge: "Guidance",
+      icon: <IconMentor />
     }
   ];
+
+  const filteredEvents = events.filter(ev => {
+    if (eventFilter === 'CONFLICTS') return ev.event_type.includes('conflict');
+    if (eventFilter === 'ANALYSIS') return ev.event_type.includes('analysis');
+    if (eventFilter === 'GOALS') return ev.event_type.includes('goal');
+    if (eventFilter === 'FALLBACKS') return ev.event_type.includes('fallback');
+    return true;
+  });
 
   return (
     <div className="agents-view-container">
       {/* Agents Roster Card */}
       <div className="section-card agents-roster-card">
-        <div className="placeholder-badge-row">
-          <span className="mission-tag tag-amber">MULTI-AGENT COLLABORATION</span>
-          <span className="mission-tag">BACKEND PERSISTENCE</span>
+        <div className="card-badge-row">
+          <span className="pill-badge pill-badge-indigo">MULTI-AGENT COLLABORATION</span>
+          <span className="pill-badge pill-badge-emerald">PERSISTENT TELEMETRY</span>
         </div>
-        <h2 className="placeholder-title">Autonomous Career Intelligence Roster</h2>
-        <p className="placeholder-desc">
-          Six specialized AI agents collaborate across diagnostic evaluation, skill auditing, root-cause detection, and roadmap orchestration.
+        <h2 className="section-title">Autonomous Career Intelligence Roster</h2>
+        <p className="section-subtitle">
+          Six specialized AI agents collaborate across profile diagnostics, empirical verification, root-cause detection, and topological roadmap orchestration.
         </p>
 
         <div className="roster-grid">
           {agentsRoster.map((ag, i) => (
             <div key={i} className="agent-card">
               <div className="agent-card-header">
-                <span className="agent-name">{ag.name}</span>
+                <div className="agent-icon-name-row">
+                  <span className="agent-avatar-icon">{ag.icon}</span>
+                  <span className="agent-name">{ag.name}</span>
+                </div>
                 <span className="agent-type-badge">{ag.badge}</span>
               </div>
               <p className="agent-role-text">{ag.role}</p>
@@ -99,10 +118,10 @@ export default function AgentsView({ profileId, state }) {
         <div className="section-card reconciliation-card">
           <div className="section-header">
             <div>
-              <span className="card-eyebrow">Orchestrator Conflict Resolution</span>
-              <h3 className="section-title">Agent Discrepancy Reconciled</h3>
+              <span className="card-eyebrow">ORCHESTRATOR RECONCILIATION</span>
+              <h3 className="section-title">Audited Discrepancy Resolved</h3>
             </div>
-            <span className="reconciled-pill">✓ Resolved</span>
+            <span className="reconciled-pill">✓ Resolved by Orchestrator</span>
           </div>
           <div className="reconciliation-body">
             <div className="reconciliation-item conflict-item">
@@ -121,8 +140,8 @@ export default function AgentsView({ profileId, state }) {
       <div className="section-card timeline-card">
         <div className="section-header">
           <div>
-            <span className="card-eyebrow">Backend Event Log</span>
-            <h3 className="section-title">Actual Agent Execution Timeline</h3>
+            <span className="card-eyebrow">PERSISTED EVENT AUDIT</span>
+            <h3 className="section-title">Real Agent Execution Timeline</h3>
           </div>
           <button
             type="button"
@@ -130,22 +149,69 @@ export default function AgentsView({ profileId, state }) {
             onClick={loadTimeline}
             disabled={loading}
           >
-            🔄 Refresh Events
+            <IconRefresh />
+            <span>{loading ? 'Refreshing...' : 'Refresh Events'}</span>
           </button>
+        </div>
+
+        {/* Timeline Event Filters */}
+        <div className="timeline-filter-row">
+          <span className="filter-label">Filter Events:</span>
+          <div className="filter-pills-wrap">
+            <button
+              type="button"
+              className={`filter-pill-btn ${eventFilter === 'ALL' ? 'active' : ''}`}
+              onClick={() => setEventFilter('ALL')}
+            >
+              All Events ({events.length})
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${eventFilter === 'ANALYSIS' ? 'active' : ''}`}
+              onClick={() => setEventFilter('ANALYSIS')}
+            >
+              Analyses
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${eventFilter === 'CONFLICTS' ? 'active' : ''}`}
+              onClick={() => setEventFilter('CONFLICTS')}
+            >
+              Conflicts & Reconciliations
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${eventFilter === 'GOALS' ? 'active' : ''}`}
+              onClick={() => setEventFilter('GOALS')}
+            >
+              Goal Switches
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${eventFilter === 'FALLBACKS' ? 'active' : ''}`}
+              onClick={() => setEventFilter('FALLBACKS')}
+            >
+              Fallbacks
+            </button>
+          </div>
         </div>
 
         {loading ? (
           <p className="loading-text">Loading agent events from database...</p>
-        ) : events.length === 0 ? (
-          <p className="empty-events-text">No agent events recorded yet. Run an assessment or change goals to trigger agent activity.</p>
+        ) : filteredEvents.length === 0 ? (
+          <div className="empty-events-box">
+            <p className="empty-events-text">
+              No agent events recorded for the selected filter. Run a technical assessment or change goals to trigger multi-agent analysis.
+            </p>
+          </div>
         ) : (
           <div className="timeline-events-list">
-            {events.map((ev) => (
+            {filteredEvents.map((ev) => (
               <div key={ev.id} className="timeline-event-row">
                 <div className="event-left-meta">
                   <span className="event-agent-name">{ev.agent_name}</span>
-                  <span className={`event-type-badge type-${ev.event_type.replace(' ', '-')}`}>
-                    {ev.event_type}
+                  <span className={`event-type-badge type-${ev.event_type.replace(/_/g, '-')}`}>
+                    {ev.event_type.replace(/_/g, ' ')}
                   </span>
                 </div>
                 <div className="event-detail-box">

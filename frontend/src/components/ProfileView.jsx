@@ -18,6 +18,7 @@ export default function ProfileView({
   const [goalPreview, setGoalPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('ALL');
 
   useEffect(() => {
     if (profile) {
@@ -66,7 +67,7 @@ export default function ProfileView({
         skills: ratings
       });
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2500);
+      setTimeout(() => setSaveSuccess(false), 3000);
     }
   };
 
@@ -82,14 +83,39 @@ export default function ProfileView({
     setGoalPreview(null);
   };
 
+  const categories = ['ALL', ...new Set(catalog?.skills?.map(s => s.category) || [])];
+  const filteredSkills = catalog?.skills?.filter(s =>
+    activeCategoryFilter === 'ALL' || s.category === activeCategoryFilter
+  ) || [];
+
+  const getLevelLabel = (lvl) => {
+    switch (lvl) {
+      case 0: return 'Unskilled (0)';
+      case 1: return 'Novice (1)';
+      case 2: return 'Basic (2)';
+      case 3: return 'Competent (3)';
+      case 4: return 'Proficient (4)';
+      case 5: return 'Master (5)';
+      default: return `Level ${lvl}`;
+    }
+  };
+
   return (
     <div className="profile-container">
-      {/* Top Banner with Load Sample Student */}
+      {/* Welcome & Management Banner */}
       <div className="section-card profile-header-card">
         <div className="profile-header-info">
           <div>
-            <span className="card-eyebrow">Learner Profile Management</span>
-            <h2 className="section-title">Student Profile & Competencies</h2>
+            <div className="card-badge-row">
+              <span className="pill-badge pill-badge-indigo">LEARNER PROFILE</span>
+              <span className="pill-badge pill-badge-emerald">ACTIVE SESSION</span>
+            </div>
+            <h2 className="section-title">
+              Welcome back, {name || 'Student'} 👋
+            </h2>
+            <p className="section-subtitle">
+              Manage your career objectives, calibrate self-reported proficiencies, and review autonomous profile intelligence.
+            </p>
           </div>
           <div className="profile-actions-row">
             <button
@@ -97,7 +123,7 @@ export default function ProfileView({
               className="btn-secondary"
               onClick={onLoadSampleStudent}
               disabled={loading}
-              title="Reset and load default sample student (Python 3, SQL 3, html_css 2)"
+              title="Reset profile to default sample student with Python 3, SQL 3, and HTML/CSS 2"
             >
               <span>🔄 Load Sample Student</span>
             </button>
@@ -114,13 +140,16 @@ export default function ProfileView({
 
         {saveSuccess && (
           <div className="alert-success-banner">
-            ✓ Profile, interests, and skill ratings updated successfully!
+            ✓ Profile, interests, and competency ratings updated successfully!
           </div>
         )}
 
+        {/* Profile Attributes Form */}
         <div className="profile-form-grid">
           <div className="form-group">
-            <label className="form-label" htmlFor="student-name-input">Student Name</label>
+            <label className="form-label" htmlFor="student-name-input">
+              Student Full Name
+            </label>
             <input
               id="student-name-input"
               type="text"
@@ -132,7 +161,9 @@ export default function ProfileView({
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="target-goal-select">Target Career Goal</label>
+            <label className="form-label" htmlFor="target-goal-select">
+              Target Career Role
+            </label>
             <select
               id="target-goal-select"
               className="form-select"
@@ -150,7 +181,7 @@ export default function ProfileView({
 
         <div className="form-group" style={{ marginTop: '16px' }}>
           <label className="form-label" htmlFor="student-interests-input">
-            Technical Interests & Focus Areas
+            Technical Interests & Specialization Areas
           </label>
           <input
             id="student-interests-input"
@@ -162,45 +193,52 @@ export default function ProfileView({
           />
         </div>
 
-        {/* Goal Change Preview Card (POST /goal/preview demonstration) */}
+        {/* Goal Change Preview Card */}
         {goalPreview && (
           <div className="goal-preview-card">
             <div className="preview-header">
-              <span className="badge-preview">Goal Change Impact Preview</span>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div>
+                <span className="badge-preview">CAREER TRANSITION PREVIEW</span>
+                <h4 className="preview-heading">
+                  Switching to {catalog?.roles?.find(r => r.id === selectedGoal)?.title}
+                </h4>
+              </div>
+              <div className="preview-buttons">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn-secondary btn-sm"
                   onClick={handleCancelPreview}
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  className="btn-apply-goal"
+                  className="btn-primary btn-sm"
                   onClick={handleApplyGoal}
                   disabled={loading}
                 >
-                  Confirm Switch to {catalog?.roles?.find(r => r.id === selectedGoal)?.title} →
+                  Confirm Switch →
                 </button>
               </div>
             </div>
 
             <div className="preview-metrics-row">
               <div className="metric-box">
-                <span className="metric-lbl">Readiness Before</span>
+                <span className="metric-lbl">READINESS BEFORE</span>
                 <span className="metric-val">{goalPreview.readiness_before}%</span>
               </div>
               <div className="metric-arrow">➔</div>
-              <div className="metric-box">
-                <span className="metric-lbl">Readiness After</span>
+              <div className="metric-box highlight-box">
+                <span className="metric-lbl">PROJECTED READINESS</span>
                 <span className="metric-val highlight">{goalPreview.readiness_after}%</span>
               </div>
             </div>
 
             <div className="preview-skills-summary">
               <div className="preview-col">
-                <span className="col-title kept-title">Kept Skills ({goalPreview.kept_skills.length})</span>
+                <span className="col-title kept-title">
+                  ✓ Transferable Competencies ({goalPreview.kept_skills.length})
+                </span>
                 <div className="tags-wrap">
                   {goalPreview.kept_skills.map(s => (
                     <span key={s} className="tag tag-kept">{s}</span>
@@ -209,7 +247,9 @@ export default function ProfileView({
               </div>
 
               <div className="preview-col">
-                <span className="col-title added-title">Added Skills ({goalPreview.added_skills.length})</span>
+                <span className="col-title added-title">
+                  + Newly Required Competencies ({goalPreview.added_skills.length})
+                </span>
                 <div className="tags-wrap">
                   {goalPreview.added_skills.map(s => (
                     <span key={s} className="tag tag-added">+{s}</span>
@@ -218,7 +258,9 @@ export default function ProfileView({
               </div>
 
               <div className="preview-col">
-                <span className="col-title removed-title">Removed Skills ({goalPreview.removed_skills.length})</span>
+                <span className="col-title removed-title">
+                  - Non-Essential For New Goal ({goalPreview.removed_skills.length})
+                </span>
                 <div className="tags-wrap">
                   {goalPreview.removed_skills.map(s => (
                     <span key={s} className="tag tag-removed">-{s}</span>
@@ -230,35 +272,37 @@ export default function ProfileView({
         )}
       </div>
 
-      {/* Profile Analyst Intelligence Card (Deterministic Zero-LLM) */}
+      {/* Profile Analyst Intelligence Card */}
       {profileSummary && (
         <div className="section-card profile-summary-card">
           <div className="section-header">
             <div>
-              <span className="card-eyebrow">Profile Intelligence</span>
-              <h3 className="section-title">Deterministic Profile Analyst Summary</h3>
+              <span className="card-eyebrow">DIAGNOSTIC SYNTHESIS</span>
+              <h3 className="section-title">Autonomous Profile Analyst Summary</h3>
             </div>
-            <span className="subhead-meta">Zero-LLM Phase 1 Foundation</span>
+            <span className="role-chip-tag">
+              Target: {profileSummary.selected_career?.title}
+            </span>
           </div>
 
           <div className="summary-details-grid">
             <div className="summary-item">
-              <span className="summary-label">Target Career</span>
+              <span className="summary-label">Target Role</span>
               <span className="summary-value font-bold">{profileSummary.selected_career?.title}</span>
             </div>
 
             <div className="summary-item">
-              <span className="summary-label">Focus Interests</span>
-              <span className="summary-value">{profileSummary.interests}</span>
+              <span className="summary-label">Technical Focus</span>
+              <span className="summary-value">{profileSummary.interests || 'Not specified'}</span>
             </div>
 
             <div className="summary-item">
               <span className="summary-label">Claimed Strengths</span>
-              <div className="tags-wrap" style={{ marginTop: '4px' }}>
+              <div className="tags-wrap" style={{ marginTop: '6px' }}>
                 {profileSummary.claimed_strengths?.length > 0 ? (
                   profileSummary.claimed_strengths.map(s => (
                     <span key={s.skill_id} className="tag tag-kept">
-                      {s.skill_name} (L{s.claimed_level})
+                      {s.skill_name} (Level {s.claimed_level})
                     </span>
                   ))
                 ) : (
@@ -268,8 +312,8 @@ export default function ProfileView({
             </div>
 
             <div className="summary-item">
-              <span className="summary-label">Primary Gaps</span>
-              <div className="tags-wrap" style={{ marginTop: '4px' }}>
+              <span className="summary-label">Priority Deficits</span>
+              <div className="tags-wrap" style={{ marginTop: '6px' }}>
                 {profileSummary.main_skill_gaps?.length > 0 ? (
                   profileSummary.main_skill_gaps.map(g => (
                     <span key={g.skill_id} className="tag tag-removed">
@@ -284,30 +328,55 @@ export default function ProfileView({
           </div>
 
           <div className="profile-observation-box">
-            <span className="obs-label">TRANSPARENT PROFILE OBSERVATION:</span>
+            <div className="obs-header">
+              <span className="obs-label">AI PROFILE OBSERVATION:</span>
+              <span className="pill-badge pill-badge-sky">PERSISTED</span>
+            </div>
             <p className="obs-text">{profileSummary.observation}</p>
           </div>
         </div>
       )}
 
-      {/* Skills Self-Claimed Ratings Section (0-5 Rating Sliders) */}
+      {/* Skills Self-Claimed Ratings Section */}
       <div className="section-card skills-ratings-card">
         <div className="section-header">
           <div>
-            <span className="card-eyebrow">Self-Claimed Proficiency</span>
-            <h3 className="section-title">Skill Ratings (0 - 5 Scale)</h3>
+            <span className="card-eyebrow">COMPETENCY CALIBRATION</span>
+            <h3 className="section-title">Self-Claimed Skill Levels (0 - 5 Scale)</h3>
           </div>
           <span className="subhead-meta">Adjust sliders to calibrate diagnostic gaps</span>
         </div>
 
+        {/* Category Filter Pills */}
+        <div className="category-filter-row">
+          <span className="filter-label">Category Filter:</span>
+          <div className="filter-pills-wrap">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                className={`filter-pill-btn ${activeCategoryFilter === cat ? 'active' : ''}`}
+                onClick={() => setActiveCategoryFilter(cat)}
+              >
+                {cat.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="skills-sliders-grid">
-          {catalog?.skills?.map(skill => {
+          {filteredSkills.map(skill => {
             const currentVal = ratings[skill.id] || 0;
             return (
-              <div key={skill.id} className="skill-slider-row">
-                <div className="slider-label-group">
-                  <span className="skill-slider-name">{skill.name}</span>
-                  <span className="skill-category-badge">{skill.category}</span>
+              <div key={skill.id} className="skill-slider-card">
+                <div className="slider-card-top">
+                  <div className="skill-info-block">
+                    <span className="skill-slider-name">{skill.name}</span>
+                    <span className="skill-category-badge">{skill.category}</span>
+                  </div>
+                  <span className={`slider-value-chip level-${currentVal}`}>
+                    {getLevelLabel(currentVal)}
+                  </span>
                 </div>
 
                 <div className="slider-input-group">
@@ -320,9 +389,14 @@ export default function ProfileView({
                     value={currentVal}
                     onChange={(e) => handleSliderChange(skill.id, e.target.value)}
                   />
-                  <span className={`slider-value-chip level-${currentVal}`}>
-                    Level {currentVal}
-                  </span>
+                  <div className="slider-ticks">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                  </div>
                 </div>
               </div>
             );

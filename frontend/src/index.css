@@ -2,50 +2,65 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Template Theme: Modern Light Pastel Dashboard */
-  --bg-page: #ebf1f6;
+  /* Modern Premium SaaS Light Theme */
+  --bg-page: #f8fafc;
   --bg-card: #ffffff;
   --bg-card-subtle: #f8fafc;
+  --bg-card-hover: #f1f5f9;
   --bg-sidebar: #ffffff;
+  --bg-sidebar-active: #eef2ff;
 
-  /* Card Pastel Tints matching template */
-  --tint-blue-bg: #e0f2fe;
-  --tint-blue-text: #0284c7;
-  --tint-purple-bg: #ede9fe;
-  --tint-purple-text: #7c3aed;
-  --tint-pink-bg: #ffe4e6;
-  --tint-pink-text: #e11d48;
-  --tint-amber-bg: #fef3c7;
-  --tint-amber-text: #d97706;
-  --tint-green-bg: #dcfce7;
-  --tint-green-text: #16a34a;
+  /* Primary Deep Indigo & Violet Accents */
+  --primary-indigo: #4f46e5;
+  --primary-indigo-hover: #4338ca;
+  --primary-indigo-light: #eef2ff;
+  --primary-violet: #6366f1;
+  --primary-navy: #0f172a;
+
+  /* Semantic Accents */
+  --accent-emerald: #10b981;
+  --accent-emerald-light: #ecfdf5;
+  --accent-emerald-border: #a7f3d0;
+  --accent-emerald-text: #065f46;
+
+  --accent-amber: #f59e0b;
+  --accent-amber-light: #fffbeb;
+  --accent-amber-border: #fde68a;
+  --accent-amber-text: #92400e;
+
+  --accent-rose: #ef4444;
+  --accent-rose-light: #fef2f2;
+  --accent-rose-border: #fecaca;
+  --accent-rose-text: #991b1b;
+
+  --accent-sky: #0284c7;
+  --accent-sky-light: #f0f9ff;
+  --accent-sky-border: #bae6fd;
+  --accent-sky-text: #0369a1;
 
   /* Borders & Shadows */
   --border-light: #e2e8f0;
   --border-subtle: #f1f5f9;
-  --shadow-dashboard: 0 25px 60px -15px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.6);
-  --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.04);
-  --shadow-hover: 0 10px 25px -3px rgba(15, 23, 42, 0.08);
+  --border-focus: #818cf8;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-dropdown: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-dashboard: 0 20px 40px -15px rgba(15, 23, 42, 0.06), 0 0 0 1px rgba(226, 232, 240, 0.8);
 
   /* Text Hierarchy */
   --text-main: #0f172a;
-  --text-secondary: #475569;
+  --text-secondary: #334155;
   --text-muted: #64748b;
   --text-dim: #94a3b8;
 
-  /* Primary Brand & Accents */
-  --primary-navy: #1e293b;
-  --primary-teal: #0f766e;
-  --accent-cyan: #0284c7;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
-
   /* Radii */
-  --radius-dashboard: 28px;
-  --radius-card: 20px;
+  --radius-dashboard: 20px;
+  --radius-card: 14px;
   --radius-pill: 9999px;
-  --radius-sm: 10px;
+  --radius-md: 10px;
+  --radius-sm: 8px;
 
   --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -85,7 +100,7 @@ button {
 }
 
 button:focus-visible {
-  outline: 2px solid var(--accent-cyan);
+  outline: 2px solid var(--primary-indigo);
   outline-offset: 2px;
 }
 

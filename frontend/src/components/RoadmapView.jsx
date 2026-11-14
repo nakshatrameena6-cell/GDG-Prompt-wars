@@ -1,50 +1,61 @@
 import React from 'react';
+import { IconExternalLink, IconLock, IconCheckCircle } from './Icons';
 
 export default function RoadmapView({ state, onCompleteModule, completingModuleId }) {
   if (!state || !state.roadmap) {
     return (
       <div className="section-card loading-card">
-        <p>Loading personalized learning roadmap...</p>
+        <p className="loading-text">Loading personalized learning roadmap...</p>
       </div>
     );
   }
 
   const { roadmap, role } = state;
+  const doneCount = roadmap.filter(m => m.status === 'done').length;
+  const activeCount = roadmap.filter(m => m.status === 'active').length;
+  const lockedCount = roadmap.filter(m => m.status === 'locked').length;
 
   return (
     <div className="roadmap-container">
       {/* Roadmap Header Card */}
       <div className="section-card roadmap-header-card">
         <div className="roadmap-header-left">
-          <span className="card-eyebrow">Topologically Sequenced Learning Path</span>
+          <div className="card-badge-row">
+            <span className="pill-badge pill-badge-indigo">TOPOLOGICAL SEQUENCING</span>
+            <span className="pill-badge pill-badge-sky">PREREQUISITE DAG</span>
+          </div>
           <h2 className="section-title">{role?.title} Roadmap</h2>
-          <p className="roadmap-desc">
-            Prerequisites are enforced in topological order. Complete active modules to unlock downstream requirements.
+          <p className="section-subtitle">
+            Prerequisites are enforced in strict topological dependency order. Complete active modules to unlock downstream requirements.
           </p>
         </div>
         <div className="roadmap-stats-badges">
           <div className="r-stat-chip">
-            <span className="r-stat-count">
-              {roadmap.filter(m => m.status === 'done').length}/{roadmap.length}
-            </span>
+            <span className="r-stat-count">{doneCount}/{roadmap.length}</span>
             <span className="r-stat-label">Modules Done</span>
           </div>
-          <div className="r-stat-chip">
-            <span className="r-stat-count active-count">
-              {roadmap.filter(m => m.status === 'active').length}
-            </span>
+          <div className="r-stat-chip active-chip">
+            <span className="r-stat-count active-count">{activeCount}</span>
             <span className="r-stat-label">Active Now</span>
+          </div>
+          <div className="r-stat-chip">
+            <span className="r-stat-count locked-count">{lockedCount}</span>
+            <span className="r-stat-label">Locked</span>
           </div>
         </div>
       </div>
 
-      {/* Modules List */}
+      {/* Modules List Timeline */}
       <div className="roadmap-modules-timeline">
         {roadmap.map((module) => {
           const isDone = module.status === 'done';
           const isActive = module.status === 'active';
           const isLocked = module.status === 'locked';
           const isCompleting = completingModuleId === module.id;
+
+          const verifiedText = module.verified_level !== null && module.verified_level !== undefined
+            ? `Level ${module.verified_level}`
+            : 'Unverified';
 
           return (
             <div
@@ -53,18 +64,21 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
             >
               <div className="module-top-row">
                 <div className="module-title-group">
-                  <span className="module-step-badge">
-                    {isDone ? '✓' : `#${module.order}`}
-                  </span>
+                  <div className={`module-step-badge step-${module.status}`}>
+                    {isDone ? <IconCheckCircle /> : isLocked ? <IconLock /> : `#${module.order}`}
+                  </div>
                   <div>
-                    <h3 className="module-title">{module.skill_name}</h3>
+                    <div className="module-title-header">
+                      <h3 className="module-title">{module.skill_name}</h3>
+                      <span className={`priority-tag priority-${(module.priority || 'medium').toLowerCase()}`}>
+                        {module.priority || 'MEDIUM'} PRIORITY
+                      </span>
+                    </div>
+
                     <div className="module-meta-row">
                       <span className="cat-pill">{module.category}</span>
-                      <span className={`priority-tag priority-${(module.priority || 'medium').toLowerCase()}`}>
-                        Priority: {module.priority || 'MEDIUM'}
-                      </span>
-                      <span className="level-target-text mono">
-                        Req: L{module.required_level} | Claimed: L{module.claimed_level} | Verified: {module.verified_level !== null && module.verified_level !== undefined ? `L${module.verified_level}` : 'Unverified'}
+                      <span className="level-meta-text mono">
+                        Target: <strong>Level {module.required_level}</strong> • Claimed: Level {module.claimed_level} • Verified: {verifiedText}
                       </span>
                     </div>
                   </div>
@@ -87,42 +101,33 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
                       {isCompleting ? 'Updating...' : 'Mark Complete ✓'}
                     </button>
                   )}
-
-                  {isDone && (
-                    <span className="completed-check-label">
-                      ✓ Done
-                    </span>
-                  )}
-
-                  {isLocked && (
-                    <span className="locked-helper-text">
-                      Prerequisites required
-                    </span>
-                  )}
                 </div>
               </div>
 
               {/* Module Rationale "Why" Text */}
               <div className="module-why-box">
-                <span className="why-label">WHY LEARN THIS:</span>
+                <span className="why-label">CURRICULUM RATIONALE:</span>
                 <p className="why-text">{module.why}</p>
               </div>
 
               {/* Prerequisites if any */}
               {module.prerequisites && module.prerequisites.length > 0 && (
                 <div className="module-prereqs-row">
-                  <span className="prereq-label">Prerequisites:</span>
+                  <span className="prereq-label">Prerequisite Chain:</span>
                   <div className="prereq-tags">
-                    {module.prerequisites.map((p) => (
-                      <span key={p} className="prereq-pill">
-                        {p}
-                      </span>
+                    {module.prerequisites.map((p, idx) => (
+                      <React.Fragment key={p}>
+                        <span className="prereq-pill">{p}</span>
+                        {idx < module.prerequisites.length - 1 && (
+                          <span className="prereq-arrow">➔</span>
+                        )}
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Resources as Clickable Links */}
+              {/* Resources as Clickable Cards */}
               {module.resources && module.resources.length > 0 && (
                 <div className="module-resources-section">
                   <span className="resources-title">Curated Learning Resources:</span>
@@ -138,10 +143,13 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
                       >
                         <div className="res-link-header">
                           <span className="res-type-tag">{res.type}</span>
-                          <span className="res-level-tag mono">L{res.level}</span>
+                          <span className="res-level-tag mono">Level {res.level}</span>
                         </div>
                         <span className="res-link-title">{res.title}</span>
-                        <span className="res-external-arrow">↗</span>
+                        <div className="res-link-footer">
+                          <span className="res-site-name">Official Resource</span>
+                          <IconExternalLink />
+                        </div>
                       </a>
                     ))}
                   </div>
@@ -154,4 +162,3 @@ export default function RoadmapView({ state, onCompleteModule, completingModuleI
     </div>
   );
 }
-

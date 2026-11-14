@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { sendMentorQuery } from '../api';
+import { IconSparkles } from './Icons';
 
 export default function MentorView({ profileId, state }) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
   const [messages, setMessages] = useState([
     {
       sender: 'mentor',
       text: (
         state?.agent_orchestration?.career_matcher?.alignment ||
-        "Hello! I am your QUANTA AI Mentor. I review your active roadmap modules, assessment telemetry, and career goals to provide targeted preparation guidance."
+        `Hello! I am your QUANTA AI Mentor. I review your active roadmap modules for ${state?.role?.title || 'your target career'}, diagnostic assessment telemetry, and skill gaps to provide targeted placement preparation advice.`
       ),
-      nextStep: "Complete your active roadmap modules or take the technical assessment to calibrate verified proficiency.",
-      encouragement: "Consistency in code tracing and daily deliberate practice builds senior-level confidence."
+      nextStep: "Complete your active roadmap modules or take the technical skill assessment to calibrate verified proficiency.",
+      encouragement: "Consistency in deliberate practice and code tracing builds senior-level problem solving confidence."
     }
   ]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, loading]);
 
   const handleSend = async (userText) => {
     const textToSend = userText || query;
@@ -54,26 +65,27 @@ export default function MentorView({ profileId, state }) {
 
   const quickPrompts = [
     "How should I prioritize my active roadmap modules?",
-    "Explain the difference between Full Stack Developer and ML Engineer.",
+    "Explain the skill difference between Full Stack Developer and ML Engineer.",
     "What coding habits prevent careless assessment errors?",
     "How do I prepare for Node.js event loop interview questions?"
   ];
 
   return (
     <div className="mentor-view-container">
+      {/* Mentor Header Card */}
       <div className="section-card mentor-header-card">
-        <div className="placeholder-badge-row">
-          <span className="mission-tag tag-amber">ON-DEMAND AI MENTOR</span>
-          <span className="mission-tag">CAREER COACHING</span>
+        <div className="card-badge-row">
+          <span className="pill-badge pill-badge-indigo">ON-DEMAND AI MENTOR</span>
+          <span className="pill-badge pill-badge-emerald">CAREER STRATEGY</span>
         </div>
-        <h2 className="placeholder-title">Personalized Placement Guidance</h2>
-        <p className="placeholder-desc">
-          Get actionable feedback tailored to your current target role ({state?.role?.title}), verified skill deficits, and roadmap bottlenecks.
+        <h2 className="section-title">Personalized Placement Coach</h2>
+        <p className="section-subtitle">
+          Get actionable feedback tailored to your current target role (<strong>{state?.role?.title}</strong>), verified skill deficits, and roadmap bottlenecks.
         </p>
 
         {/* Quick Prompts */}
         <div className="quick-prompts-row">
-          <span className="quick-prompts-label">Suggested Inquiries:</span>
+          <span className="quick-prompts-label">Suggested Coaching Inquiries:</span>
           <div className="prompt-pills-wrap">
             {quickPrompts.map((p, i) => (
               <button
@@ -83,14 +95,15 @@ export default function MentorView({ profileId, state }) {
                 onClick={() => handleSend(p)}
                 disabled={loading}
               >
-                {p}
+                <IconSparkles />
+                <span>{p}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Chat Messages */}
+      {/* Chat Messages Conversation Stream */}
       <div className="mentor-conversation-card section-card">
         <div className="messages-stream">
           {messages.map((m, idx) => (
@@ -120,10 +133,16 @@ export default function MentorView({ profileId, state }) {
             <div className="message-bubble-wrapper mentor">
               <div className="message-sender-tag">🤖 QUANTA AI MENTOR</div>
               <div className="message-content">
-                <p className="message-text typing-text">Generating targeted career guidance...</p>
+                <div className="typing-indicator-row">
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                  <span className="typing-dot"></span>
+                  <span className="typing-label">Analyzing profile telemetry and formulating advice...</span>
+                </div>
               </div>
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Bar */}
@@ -143,7 +162,7 @@ export default function MentorView({ profileId, state }) {
             onClick={() => handleSend()}
             disabled={loading || !query.trim()}
           >
-            Send ➔
+            <span>Send ➔</span>
           </button>
         </div>
       </div>

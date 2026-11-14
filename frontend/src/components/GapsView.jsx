@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function GapsView({ state }) {
+  const [filter, setFilter] = useState('ALL'); // 'ALL' | 'GAPS' | 'SATISFIED'
+
   if (!state) {
     return (
       <div className="section-card loading-card">
-        <p>Loading skill gap analysis...</p>
+        <p className="loading-text">Loading skill gap analysis...</p>
       </div>
     );
   }
 
   const { role, skills, readiness, verification_coverage, gap_skills } = state;
+
+  const totalSkills = skills?.length || 0;
+  const gapCount = gap_skills?.length || 0;
+  const satisfiedCount = totalSkills - gapCount;
+
+  const filteredSkills = skills?.filter(item => {
+    if (filter === 'GAPS') return item.gap > 0;
+    if (filter === 'SATISFIED') return item.gap === 0;
+    return true;
+  }) || [];
 
   return (
     <div className="gaps-container">
@@ -17,7 +29,7 @@ export default function GapsView({ state }) {
       <div className="gaps-summary-grid">
         <div className="stat-card card-blue-tint">
           <div className="stat-card-header">
-            <span className="stat-card-title">Role Readiness</span>
+            <span className="stat-card-title">Target Role Readiness</span>
             <span className="stat-badge-soft">{role?.title}</span>
           </div>
           <div className="stat-card-val-row">
@@ -32,11 +44,11 @@ export default function GapsView({ state }) {
         <div className="stat-card card-purple-tint">
           <div className="stat-card-header">
             <span className="stat-card-title">Verification Coverage</span>
-            <span className="stat-badge-soft">Assessment Tier</span>
+            <span className="stat-badge-soft">Empirical Benchmark</span>
           </div>
           <div className="stat-card-val-row">
             <span className="stat-large-num mono">{verification_coverage}%</span>
-            <span className="stat-subtext">Verified Assessment Scores</span>
+            <span className="stat-subtext">Assessed Competencies</span>
           </div>
           <div className="bar-track-wrap">
             <div className="bar-fill purple-fill" style={{ width: `${verification_coverage}%` }} />
@@ -45,107 +57,147 @@ export default function GapsView({ state }) {
 
         <div className="stat-card card-pink-tint">
           <div className="stat-card-header">
-            <span className="stat-card-title">Target Deficits</span>
-            <span className="stat-badge-soft">{gap_skills?.length} Remaining</span>
+            <span className="stat-card-title">Competency Gaps</span>
+            <span className="stat-badge-soft">{gapCount} Remaining</span>
           </div>
           <div className="stat-card-val-row">
-            <span className="stat-large-num mono">{gap_skills?.length}</span>
-            <span className="stat-subtext">Skill Gaps To Close</span>
+            <span className="stat-large-num mono">{gapCount}</span>
+            <span className="stat-subtext">Deficits To Close</span>
           </div>
           <div className="bar-track-wrap">
             <div
               className="bar-fill pink-fill"
               style={{
-                width: `${skills?.length ? Math.round(((skills.length - gap_skills.length) / skills.length) * 100) : 0}%`
+                width: `${totalSkills ? Math.round((satisfiedCount / totalSkills) * 100) : 0}%`
               }}
             />
           </div>
         </div>
       </div>
 
-      {/* Itemized Gaps Table */}
+      {/* Itemized Gaps Table Card */}
       <div className="section-card gaps-table-card">
         <div className="section-header">
           <div>
-            <span className="card-eyebrow">Diagnostic Breakdown</span>
+            <span className="card-eyebrow">DIAGNOSTIC MATRIX</span>
             <h3 className="section-title">Required Competencies vs Learner Profile</h3>
           </div>
-          <span className="role-chip-tag">{role?.title} Target</span>
+
+          <div className="table-filter-pills">
+            <button
+              type="button"
+              className={`filter-pill-btn ${filter === 'ALL' ? 'active' : ''}`}
+              onClick={() => setFilter('ALL')}
+            >
+              All Skills ({totalSkills})
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${filter === 'GAPS' ? 'active' : ''}`}
+              onClick={() => setFilter('GAPS')}
+            >
+              Deficits Only ({gapCount})
+            </button>
+            <button
+              type="button"
+              className={`filter-pill-btn ${filter === 'SATISFIED' ? 'active' : ''}`}
+              onClick={() => setFilter('SATISFIED')}
+            >
+              Satisfied ({satisfiedCount})
+            </button>
+          </div>
         </div>
 
         <div className="table-responsive">
           <table className="gaps-table">
             <thead>
               <tr>
-                <th>Skill</th>
-                <th>Category</th>
-                <th className="text-center">Claimed</th>
-                <th className="text-center">Verified</th>
+                <th>Competency</th>
+                <th>Domain</th>
+                <th className="text-center">Claimed Level</th>
+                <th className="text-center">Verified Level</th>
                 <th className="text-center">Effective</th>
                 <th className="text-center">Required</th>
-                <th className="text-center">Gap</th>
-                <th style={{ width: '180px' }}>Readiness Bar</th>
+                <th className="text-center">Gap Deficit</th>
+                <th style={{ width: '180px' }}>Readiness</th>
                 <th className="text-center">Status</th>
               </tr>
             </thead>
             <tbody>
-              {skills?.map((item) => {
-                const percent = Math.min(
-                  100,
-                  Math.round((item.effective / (item.required || 1)) * 100)
-                );
-                const hasGap = item.gap > 0;
+              {filteredSkills.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="empty-table-cell">
+                    No skills matching selected filter.
+                  </td>
+                </tr>
+              ) : (
+                filteredSkills.map((item) => {
+                  const percent = Math.min(
+                    100,
+                    Math.round((item.effective / (item.required || 1)) * 100)
+                  );
+                  const hasGap = item.gap > 0;
+                  const isSevereGap = item.gap >= 2;
 
-                return (
-                  <tr key={item.skill_id} className={hasGap ? 'row-gap' : 'row-fulfilled'}>
-                    <td className="skill-name-cell">
-                      <strong>{item.skill_name}</strong>
-                    </td>
-                    <td>
-                      <span className="cat-pill">{item.category}</span>
-                    </td>
-                    <td className="text-center mono">
-                      Level {item.claimed}
-                    </td>
-                    <td className="text-center mono">
-                      {item.verified !== null && item.verified !== undefined ? (
-                        <span className="verified-badge">Level {item.verified}</span>
-                      ) : (
-                        <span className="unverified-text">Unverified</span>
-                      )}
-                    </td>
-                    <td className="text-center mono font-bold">
-                      {item.effective}
-                    </td>
-                    <td className="text-center mono">
-                      {item.required}
-                    </td>
-                    <td className="text-center mono">
-                      {hasGap ? (
-                        <span className="gap-badge-danger">-{item.gap}</span>
-                      ) : (
-                        <span className="gap-badge-zero">0</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="table-bar-track">
-                        <div
-                          className={`table-bar-fill ${hasGap ? 'fill-amber' : 'fill-green'}`}
-                          style={{ width: `${percent}%` }}
-                        />
-                      </div>
-                      <span className="table-bar-text mono">{percent}%</span>
-                    </td>
-                    <td className="text-center">
-                      {hasGap ? (
-                        <span className="status-pill status-gap">Gap</span>
-                      ) : (
-                        <span className="status-pill status-satisfied">✓ Satisfied</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={item.skill_id} className={hasGap ? 'row-gap' : 'row-fulfilled'}>
+                      <td className="skill-name-cell">
+                        <span className="skill-title-text">{item.skill_name}</span>
+                      </td>
+                      <td>
+                        <span className="cat-pill">{item.category}</span>
+                      </td>
+                      <td className="text-center mono">
+                        <span className="level-pill claimed-pill">
+                          Level {item.claimed}
+                        </span>
+                      </td>
+                      <td className="text-center mono">
+                        {item.verified !== null && item.verified !== undefined ? (
+                          <span className="level-pill verified-pill">
+                            Level {item.verified}
+                          </span>
+                        ) : (
+                          <span className="level-pill unverified-pill">
+                            ⚪ Unverified
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-center mono font-bold">
+                        <span className="effective-val">L{item.effective}</span>
+                      </td>
+                      <td className="text-center mono">
+                        <span className="required-val">L{item.required}</span>
+                      </td>
+                      <td className="text-center mono">
+                        {hasGap ? (
+                          <span className={`gap-badge ${isSevereGap ? 'gap-severe' : 'gap-warning'}`}>
+                            -{item.gap}
+                          </span>
+                        ) : (
+                          <span className="gap-badge gap-zero">0</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="table-bar-track">
+                          <div
+                            className={`table-bar-fill ${hasGap ? 'fill-amber' : 'fill-green'}`}
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                        <span className="table-bar-text mono">{percent}% Met</span>
+                      </td>
+                      <td className="text-center">
+                        {hasGap ? (
+                          <span className="status-pill status-gap">Needs Focus</span>
+                        ) : (
+                          <span className="status-pill status-satisfied">✓ Satisfied</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -153,4 +205,3 @@ export default function GapsView({ state }) {
     </div>
   );
 }
-

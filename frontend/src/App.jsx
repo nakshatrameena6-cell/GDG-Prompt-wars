@@ -15,7 +15,6 @@ import RoadmapView from './components/RoadmapView';
 import AssessmentView from './components/AssessmentView';
 import MentorView from './components/MentorView';
 import AgentsView from './components/AgentsView';
-import PlaceholderView from './components/PlaceholderView';
 import {
   fetchCatalog,
   fetchState,
@@ -26,10 +25,7 @@ import {
 } from './api';
 import {
   IconLogo,
-  IconHome,
   IconDrill,
-  IconChart,
-  IconSettings,
   IconDiamond,
   IconCoin,
   IconBell,
@@ -40,7 +36,11 @@ import {
   IconGaps,
   IconRoadmap,
   IconAgents,
-  IconMentor
+  IconMentor,
+  IconRefresh,
+  IconMenu,
+  IconClose,
+  IconSettings
 } from './components/Icons';
 import './App.css';
 
@@ -48,7 +48,9 @@ export default function App() {
   // Screen state: 'MAIN' | 'DRILL' | 'TRANSITION' | 'RESULT'
   const [screen, setScreen] = useState('MAIN');
   // Navigation: 'profile' | 'gaps' | 'roadmap' | 'assessment' | 'mentor' | 'agents'
-  const [activeNav, setActiveNav] = useState('gaps');
+  const [activeNav, setActiveNav] = useState('profile');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
   // Backend state
   const [catalog, setCatalog] = useState(null);
@@ -65,6 +67,11 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [pendingTransition, setPendingTransition] = useState(null);
   const [sessionResults, setSessionResults] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   // Load initial backend state and catalog
   const loadInitialData = useCallback(async () => {
@@ -95,6 +102,7 @@ export default function App() {
       setLoading(true);
       const updatedState = await updateProfile(payload, appState?.profile?.id);
       setAppState(updatedState);
+      showToast('Profile and competency ratings updated successfully!');
     } catch (err) {
       alert(`Error updating profile: ${err.message}`);
     } finally {
@@ -112,6 +120,7 @@ export default function App() {
       } else {
         await loadInitialData();
       }
+      showToast('Sample Student profile loaded (Python 3, SQL 3, HTML/CSS 2)!');
     } catch (err) {
       alert(`Error seeding sample student: ${err.message}`);
     } finally {
@@ -125,6 +134,7 @@ export default function App() {
       setLoading(true);
       const updatedState = await changeGoal(newGoal, appState?.profile?.id);
       setAppState(updatedState);
+      showToast(`Target goal updated to ${catalog?.roles?.find(r => r.id === newGoal)?.title || newGoal}!`);
     } catch (err) {
       alert(`Error updating goal: ${err.message}`);
     } finally {
@@ -138,6 +148,7 @@ export default function App() {
       setCompletingModuleId(moduleId);
       const updatedState = await completeModule(moduleId, appState?.profile?.id);
       setAppState(updatedState);
+      showToast('Module marked as completed! Downstream modules unlocked.');
     } catch (err) {
       alert(`Error completing module: ${err.message}`);
     } finally {
@@ -240,7 +251,7 @@ export default function App() {
     setScreen('MAIN');
   };
 
-  // Dynamic real state values replacing all hardcoded statistics
+  // Real state values
   const totalModules = appState?.roadmap?.length || 0;
   const doneModules = appState?.roadmap?.filter(m => m.status === 'done').length || 0;
   const roadmapCompletionPercent = totalModules > 0
@@ -251,149 +262,206 @@ export default function App() {
   const realCoverage = appState?.verification_coverage ?? 0;
   const realGapsCount = appState?.gap_skills?.length ?? 0;
   const targetRoleTitle = appState?.role?.title || 'Full Stack Developer';
+  const studentName = appState?.profile?.name || 'Student';
+
+  // Navigation Items
+  const navItems = [
+    { id: 'profile', label: 'Dashboard & Profile', icon: <IconUser /> },
+    { id: 'gaps', label: 'Skill Gaps', icon: <IconGaps /> },
+    { id: 'roadmap', label: 'Learning Roadmap', icon: <IconRoadmap /> },
+    { id: 'assessment', label: 'Assessment', icon: <IconDrill /> },
+    { id: 'mentor', label: 'AI Mentor', icon: <IconMentor /> },
+    { id: 'agents', label: 'Agent Activity', icon: <IconAgents /> },
+  ];
+
+  const getPageInfo = () => {
+    if (screen === 'DRILL') return { title: 'Placement Speed Drill', desc: 'Real-time adaptive difficulty technical speed challenge' };
+    if (screen === 'TRANSITION') return { title: 'Calibrating Difficulty', desc: 'Analyzing response telemetry and adjusting question tier' };
+    if (screen === 'RESULT') return { title: 'Performance Debrief', desc: 'Empirical telemetry breakdown and recommendation insights' };
+
+    switch (activeNav) {
+      case 'profile':
+        return {
+          title: 'Career Dashboard & Profile',
+          desc: 'Calibrate claimed ratings, review profile intelligence, and manage target goals'
+        };
+      case 'gaps':
+        return {
+          title: 'Skill Gap Analysis',
+          desc: 'Empirical comparison of self-reported vs verified proficiencies'
+        };
+      case 'roadmap':
+        return {
+          title: 'Personalized Learning Roadmap',
+          desc: 'Topologically sequenced modules with prerequisite validation'
+        };
+      case 'assessment':
+        return {
+          title: 'Technical Skill Assessment',
+          desc: '15-question calibrated evaluation with telemetry scoring'
+        };
+      case 'mentor':
+        return {
+          title: 'AI Placement Mentor',
+          desc: 'Context-aware coaching and strategic interview preparation'
+        };
+      case 'agents':
+        return {
+          title: 'Autonomous Agent System',
+          desc: 'Multi-agent coordination, discrepancy auditing, and execution timeline'
+        };
+      default:
+        return { title: 'QUANTA Platform', desc: 'AI-Powered Career Intelligence' };
+    }
+  };
+
+  const pageInfo = getPageInfo();
 
   return (
     <div className="template-viewport">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="toast-notification">
+          <span>✓ {toastMessage}</span>
+        </div>
+      )}
+
       <div className="master-dashboard-container">
-        {/* Slim Left Navigation Sidebar */}
-        <aside className="dashboard-sidebar">
+        {/* Backdrop for mobile drawer */}
+        {mobileMenuOpen && (
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Modern SaaS Left Sidebar */}
+        <aside className={`dashboard-sidebar ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           <div className="sidebar-top">
-            <IconLogo />
+            <div className="sidebar-brand-block">
+              <IconLogo />
+              <div className="brand-text-block">
+                <span className="brand-title">QUANTA</span>
+                <span className="brand-tag">Career Intelligence</span>
+              </div>
+              <button
+                type="button"
+                className="mobile-close-btn"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <IconClose />
+              </button>
+            </div>
 
             <nav className="sidebar-nav">
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'profile' && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('profile'); setScreen('MAIN'); }}
-                title="Profile"
-              >
-                <IconUser />
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'gaps' && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('gaps'); setScreen('MAIN'); }}
-                title="Gaps"
-              >
-                <IconGaps />
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'roadmap' && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('roadmap'); setScreen('MAIN'); }}
-                title="Roadmap"
-              >
-                <IconRoadmap />
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'assessment' || screen === 'DRILL' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('assessment'); setScreen('MAIN'); }}
-                title="Assessment"
-              >
-                <IconDrill />
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'mentor' && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('mentor'); setScreen('MAIN'); }}
-                title="Mentor"
-              >
-                <IconMentor />
-              </button>
-
-              <button
-                type="button"
-                className={`sidebar-nav-btn ${activeNav === 'agents' && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => { setActiveNav('agents'); setScreen('MAIN'); }}
-                title="Agents"
-              >
-                <IconAgents />
-              </button>
+              {navItems.map((item) => {
+                const isActive = activeNav === item.id && screen === 'MAIN';
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`sidebar-nav-btn ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveNav(item.id);
+                      setScreen('MAIN');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="nav-icon-wrap">{item.icon}</span>
+                    <span className="nav-label-text">{item.label}</span>
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
           <div className="sidebar-bottom">
+            <div className="sidebar-target-card">
+              <div className="sidebar-target-header">
+                <span className="target-lbl">TARGET CAREER</span>
+                <span className="target-badge-dot"></span>
+              </div>
+              <span className="target-role-name">{targetRoleTitle}</span>
+              <div className="sidebar-target-bar">
+                <div
+                  className="sidebar-target-fill"
+                  style={{ width: `${realReadiness}%` }}
+                />
+              </div>
+              <span className="sidebar-target-pct">{realReadiness}% Ready</span>
+            </div>
+
             <button
               type="button"
-              className="sidebar-nav-btn"
-              title="Reload Data"
-              onClick={loadInitialData}
+              className="sidebar-sync-btn"
+              title="Reload Backend State"
+              onClick={() => {
+                loadInitialData();
+                showToast('Synchronized with backend database.');
+              }}
+              disabled={loading}
             >
-              <IconSettings />
+              <IconRefresh />
+              <span>{loading ? 'Syncing...' : 'Sync Data'}</span>
             </button>
           </div>
         </aside>
 
         {/* Main Content Area */}
         <main className="dashboard-main-panel">
-          {/* Top Bar with Real Dynamic State Values */}
+          {/* Top Bar Navigation */}
           <header className="dashboard-topbar">
-            <div className="topbar-title-group">
-              <h1 className="dashboard-heading">
-                {screen === 'DRILL' && 'Placement Speed Drill'}
-                {screen === 'TRANSITION' && 'Calibrating Adaptive Engine'}
-                {screen === 'RESULT' && 'Session Performance Debrief'}
-                {screen === 'MAIN' && (
-                  activeNav === 'profile' ? 'Learner Profile' :
-                  activeNav === 'gaps' ? 'Skill Gap Analysis' :
-                  activeNav === 'roadmap' ? 'Learning Roadmap' :
-                  activeNav === 'assessment' ? 'Skill Assessment' :
-                  activeNav === 'mentor' ? 'AI Mentor' : 'Agentic System'
-                )}
-              </h1>
-              <span className="topbar-subhead">
-                {appState?.profile?.name ? `Student: ${appState.profile.name}` : 'PlacementPilot Diagnostic Platform'}
-              </span>
+            <div className="topbar-left">
+              <button
+                type="button"
+                className="mobile-hamburger-btn"
+                onClick={() => setMobileMenuOpen(true)}
+                title="Open Navigation Menu"
+              >
+                <IconMenu />
+              </button>
+
+              <div className="topbar-title-group">
+                <h1 className="dashboard-heading">{pageInfo.title}</h1>
+                <span className="topbar-subhead">{pageInfo.desc}</span>
+              </div>
             </div>
 
-            <div className="topbar-telemetry-chips">
-              <div className="telemetry-chip chip-cyan" title="Role Readiness Metric">
-                <span className="chip-icon"><IconDiamond /></span>
-                <span className="chip-val mono">{realReadiness}% Readiness</span>
+            <div className="topbar-right">
+              {/* Target Goal Pill */}
+              <div className="telemetry-pill pill-role" title="Active Career Target">
+                <span className="pill-prefix">GOAL</span>
+                <span className="pill-value">{targetRoleTitle}</span>
               </div>
 
-              <div className="telemetry-chip chip-amber" title="Assessment Verification Coverage">
-                <span className="chip-icon"><IconCoin /></span>
-                <span className="chip-val mono">{realCoverage}% Verified</span>
+              {/* Readiness Metric */}
+              <div className="telemetry-pill pill-readiness" title="Competency Fulfillment">
+                <span className="pill-icon"><IconDiamond /></span>
+                <span className="pill-value mono">{realReadiness}%</span>
+                <span className="pill-sub">Readiness</span>
               </div>
 
-              <div className="notification-bell-btn" title="System Active">
-                <IconBell />
-                <span className="bell-badge-dot"></span>
+              {/* Verification Coverage */}
+              <div className="telemetry-pill pill-coverage" title="Assessment Verified Coverage">
+                <span className="pill-icon"><IconCoin /></span>
+                <span className="pill-value mono">{realCoverage}%</span>
+                <span className="pill-sub">Verified</span>
+              </div>
+
+              {/* Student Profile Pill */}
+              <div className="topbar-avatar-pill" title={`Logged in as ${studentName}`}>
+                <div className="avatar-circle">
+                  {studentName.charAt(0).toUpperCase()}
+                </div>
+                <div className="avatar-info">
+                  <span className="avatar-name">{studentName}</span>
+                  <span className="avatar-status-text">Active Learner</span>
+                </div>
               </div>
             </div>
           </header>
 
-          {/* Navigation Bar: Profile | Gaps | Roadmap | Assessment | Mentor | Agents */}
-          <nav className="dashboard-subnav-bar">
-            {[
-              { id: 'profile', label: 'Profile' },
-              { id: 'gaps', label: 'Gaps' },
-              { id: 'roadmap', label: 'Roadmap' },
-              { id: 'assessment', label: 'Assessment' },
-              { id: 'mentor', label: 'Mentor' },
-              { id: 'agents', label: 'Agents' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                type="button"
-                className={`subnav-tab-btn ${activeNav === tab.id && screen === 'MAIN' ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveNav(tab.id);
-                  setScreen('MAIN');
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Real Dynamic Header Stat Cards (Replacing ALL hardcoded 78, 83%, 56%, 0X/06) */}
+          {/* Quick Stat Cards Grid */}
           <section className="top-stat-cards-grid">
             {/* Card 1: Completed Roadmap Modules */}
             <div className="stat-card card-blue-tint">
@@ -409,12 +477,15 @@ export default function App() {
                   {doneModules}/{totalModules} Modules Done
                 </span>
               </div>
+              <div className="bar-track-wrap">
+                <div className="bar-fill blue-fill" style={{ width: `${roadmapCompletionPercent}%` }} />
+              </div>
             </div>
 
             {/* Card 2: Career Target */}
             <div className="stat-card card-purple-tint">
               <div className="stat-card-header">
-                <span className="stat-card-title">Career Target</span>
+                <span className="stat-card-title">Career Objective</span>
                 <span className="stat-card-icon-wrap icon-purple">
                   <IconBook />
                 </span>
@@ -424,6 +495,9 @@ export default function App() {
                   {targetRoleTitle}
                 </span>
                 <span className="stat-subtext">Active Role Objective</span>
+              </div>
+              <div className="bar-track-wrap">
+                <div className="bar-fill purple-fill" style={{ width: `${realReadiness}%` }} />
               </div>
             </div>
 
@@ -437,7 +511,17 @@ export default function App() {
               </div>
               <div className="stat-card-val-row">
                 <span className="stat-large-num mono">{realGapsCount}</span>
-                <span className="stat-subtext mono">Deficits To Close</span>
+                <span className="stat-subtext mono">
+                  {realGapsCount === 0 ? 'All Requirements Met' : 'Deficits To Close'}
+                </span>
+              </div>
+              <div className="bar-track-wrap">
+                <div
+                  className="bar-fill pink-fill"
+                  style={{
+                    width: `${catalog?.skills?.length ? Math.max(10, Math.round(((catalog.skills.length - realGapsCount) / catalog.skills.length) * 100)) : 0}%`
+                  }}
+                />
               </div>
             </div>
           </section>
