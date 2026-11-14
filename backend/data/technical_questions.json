@@ -1,0 +1,227 @@
+[
+  {
+    "id": "tq-js-1",
+    "skill_id": "javascript",
+    "question": "What is the output of `console.log(typeof null)` and `console.log([] instanceof Object)` in JavaScript?",
+    "options": [
+      "'null' and true",
+      "'object' and true",
+      "'object' and false",
+      "'undefined' and true"
+    ],
+    "answer": 1,
+    "difficulty": "EASY",
+    "explanation": "In JavaScript, typeof null returns 'object' due to a legacy bug in the original implementation, and Array instances inherit from Object.prototype.",
+    "error_tag": "type_coercion_misconception"
+  },
+  {
+    "id": "tq-js-2",
+    "skill_id": "javascript",
+    "question": "In what order will logs print for: `setTimeout(() => console.log('A'), 0); Promise.resolve().then(() => console.log('B')); console.log('C');`?",
+    "options": [
+      "A, B, C",
+      "C, A, B",
+      "C, B, A",
+      "B, C, A"
+    ],
+    "answer": 2,
+    "difficulty": "MEDIUM",
+    "explanation": "Synchronous code ('C') runs first. Microtasks (Promise callbacks, 'B') execute before the next macrotask (setTimeout callback, 'A') on the event loop.",
+    "error_tag": "event_loop_microtask_confusion"
+  },
+  {
+    "id": "tq-js-3",
+    "skill_id": "javascript",
+    "question": "Given `for (var i = 0; i < 3; i++) { setTimeout(() => console.log(i), 10); }`, what is printed and why?",
+    "options": [
+      "0, 1, 2 because closures capture loop value",
+      "3, 3, 3 because var is function-scoped and not re-bound per iteration",
+      "undefined, undefined, undefined due to scope hoisting",
+      "0, 1, 2 because setTimeout runs synchronously in v8"
+    ],
+    "answer": 1,
+    "difficulty": "HARD",
+    "explanation": "Variables declared with 'var' share a single binding across loop iterations. By the time the callbacks fire, the single shared variable 'i' equals 3.",
+    "error_tag": "closure_scope_hoisting_error"
+  },
+  {
+    "id": "tq-react-1",
+    "skill_id": "react",
+    "question": "Why should state variables in React components never be mutated directly (e.g. `items.push(newItem)`)?",
+    "options": [
+      "JavaScript prohibits object mutation inside React components",
+      "React relies on shallow reference equality (`Object.is`) to detect state changes and schedule re-renders",
+      "Direct mutation breaks JavaScript memory garbage collection",
+      "React will throw an uncaught syntax error upon mutation"
+    ],
+    "answer": 1,
+    "difficulty": "EASY",
+    "explanation": "React compares old and new state via shallow reference equality. Mutating objects directly keeps the same reference, preventing re-renders.",
+    "error_tag": "state_mutation_reference_error"
+  },
+  {
+    "id": "tq-react-2",
+    "skill_id": "react",
+    "question": "What happens when you omit dependencies from a `useEffect` hook's dependency array while referencing component props/state?",
+    "options": [
+      "The effect hook causes a compile-time build failure",
+      "The effect closure retains stale references from the render pass in which it was created",
+      "React automatically injects missing dependencies at runtime",
+      "The effect never executes again even on initial component mount"
+    ],
+    "answer": 1,
+    "difficulty": "MEDIUM",
+    "explanation": "Omitting dependencies causes stale closure bugs where the effect holds onto values from older renders rather than current state/props.",
+    "error_tag": "stale_closure_dependency_omission"
+  },
+  {
+    "id": "tq-react-3",
+    "skill_id": "react",
+    "question": "How does React Fiber differentiate between updating state inside `startTransition` vs standard `setState`?",
+    "options": [
+      "Transitions run on a separate Web Worker thread",
+      "Transitions are marked as low-priority lane updates and can be interrupted by urgent user interactions",
+      "Transitions bypass reconciliation and directly update the real DOM",
+      "Transitions execute synchronously before the browser repaints"
+    ],
+    "answer": 1,
+    "difficulty": "HARD",
+    "explanation": "React concurrent features use priority lanes. Transition updates are non-blocking and interruptible, preserving responsiveness for clicks and typing.",
+    "error_tag": "concurrent_priority_misunderstanding"
+  },
+  {
+    "id": "tq-node-1",
+    "skill_id": "nodejs",
+    "question": "Why does calling `fs.readFileSync` inside an Express route handler degrade backend throughput under concurrency?",
+    "options": [
+      "It consumes excessive memory compared to async methods",
+      "It blocks the single main event loop thread, preventing all other concurrent HTTP requests from processing",
+      "Node.js converts synchronous filesystem calls into child processes",
+      "Operating systems terminate processes executing synchronous I/O"
+    ],
+    "answer": 1,
+    "difficulty": "EASY",
+    "explanation": "Node.js runs single-threaded JavaScript. Synchronous I/O stops the event loop, causing all concurrent connections to queue up and latency to spike.",
+    "error_tag": "blocking_event_loop_anti_pattern"
+  },
+  {
+    "id": "tq-node-2",
+    "skill_id": "nodejs",
+    "question": "In Express.js, what signature must a middleware function have to be recognized as an error-handling middleware?",
+    "options": [
+      "(req, res, next)",
+      "(err, req, res)",
+      "(err, req, res, next)",
+      "(req, res, err)"
+    ],
+    "answer": 2,
+    "difficulty": "MEDIUM",
+    "explanation": "Express inspects fn.length. An error middleware MUST declare exactly 4 arguments: (err, req, res, next). Omitting next causes it to be treated as normal middleware.",
+    "error_tag": "middleware_signature_misconfiguration"
+  },
+  {
+    "id": "tq-node-3",
+    "skill_id": "nodejs",
+    "question": "When piping a high-speed data stream into a slower destination stream in Node.js, what mechanism prevents buffer overflow?",
+    "options": [
+      "Garbage collection throttling",
+      "Backpressure via `stream.pause()`, `stream.resume()`, or `.pipe()` drain events",
+      "Kernel page fault swapping",
+      "Immediate truncation of incoming data packets"
+    ],
+    "answer": 1,
+    "difficulty": "HARD",
+    "explanation": "Backpressure signals the readable stream to pause reading when the writable stream's internal highWaterMark buffer is exceeded until a 'drain' event fires.",
+    "error_tag": "stream_backpressure_omission"
+  },
+  {
+    "id": "tq-py-1",
+    "skill_id": "python",
+    "question": "What is the result of calling `def append_val(x, lst=[]): lst.append(x); return lst` twice with `append_val(1)` then `append_val(2)`?",
+    "options": [
+      "[1] and [2]",
+      "[1] and [1, 2]",
+      "TypeError: cannot mutate default argument",
+      "[1, 2] and [1, 2]"
+    ],
+    "answer": 1,
+    "difficulty": "EASY",
+    "explanation": "In Python, default arguments are evaluated once when the function is defined. A mutable default list is shared across all function calls.",
+    "error_tag": "mutable_default_argument_trap"
+  },
+  {
+    "id": "tq-py-2",
+    "skill_id": "python",
+    "question": "Why does a generator function using `yield` consume significantly less memory when processing 10 million records than a list comprehension?",
+    "options": [
+      "Generators compile directly to machine bytecode in CPython",
+      "Generators produce values lazily on demand one item at a time instead of storing the entire collection in RAM",
+      "Python stores generator values on disk swap space",
+      "Generators bypass object instantiation and use raw CPU registers"
+    ],
+    "answer": 1,
+    "difficulty": "MEDIUM",
+    "explanation": "Generators implement lazy evaluation via the iterator protocol, maintaining only the state of the current execution frame in memory.",
+    "error_tag": "lazy_evaluation_misconception"
+  },
+  {
+    "id": "tq-py-3",
+    "skill_id": "python",
+    "question": "Why does Python's Global Interpreter Lock (GIL) hinder multi-threaded CPU-bound programs, and what is the standard standard-library solution?",
+    "options": [
+      "The GIL prevents file I/O; use asyncio to fix it",
+      "The GIL allows only one native thread to execute Python bytecode at a time; use the `multiprocessing` module or sub-interpreters to utilize multiple CPU cores",
+      "The GIL disables memory sharing; use ctypes pointers",
+      "The GIL locks socket descriptors; use threading.Lock"
+    ],
+    "answer": 1,
+    "difficulty": "HARD",
+    "explanation": "CPython's GIL ensures thread-safe memory management by allowing one thread at a time for bytecode. CPU-bound concurrency requires separate processes via `multiprocessing`.",
+    "error_tag": "gil_concurrency_architecture_error"
+  },
+  {
+    "id": "tq-sql-1",
+    "skill_id": "sql",
+    "question": "In SQL, why does `SELECT * FROM users WHERE age != 25` exclude records where `age` is NULL?",
+    "options": [
+      "NULL values automatically evaluate to 0 in numeric comparisons",
+      "Comparisons with NULL evaluate to UNKNOWN (three-valued logic); WHERE clauses require TRUE to include a row",
+      "SQL engines treat != as an invalid syntax for nullable columns",
+      "NULL represents empty string which fails integer type validation"
+    ],
+    "answer": 1,
+    "difficulty": "EASY",
+    "explanation": "SQL implements three-valued logic (TRUE, FALSE, UNKNOWN). Any arithmetic or equality comparison with NULL evaluates to UNKNOWN, which the WHERE clause filters out.",
+    "error_tag": "three_valued_null_logic_trap"
+  },
+  {
+    "id": "tq-sql-2",
+    "skill_id": "sql",
+    "question": "What is the difference between `WHERE` and `HAVING` clauses in a SQL aggregation query?",
+    "options": [
+      "WHERE filters groups after aggregation; HAVING filters rows before grouping",
+      "WHERE filters individual rows before grouping; HAVING filters aggregated groups based on aggregate expressions (e.g. COUNT, SUM)",
+      "WHERE and HAVING are completely interchangeable in ANSI SQL",
+      "HAVING can only be used on indexed primary key columns"
+    ],
+    "answer": 1,
+    "difficulty": "MEDIUM",
+    "explanation": "WHERE filters raw candidate rows before GROUP BY executes. HAVING filters the resulting aggregate groups after grouping has taken place.",
+    "error_tag": "aggregation_filter_placement_error"
+  },
+  {
+    "id": "tq-sql-3",
+    "skill_id": "sql",
+    "question": "Given a B-tree composite index on `(department_id, salary)`, which of the following queries CANNOT use the index efficiently?",
+    "options": [
+      "SELECT * FROM employees WHERE department_id = 10 AND salary > 50000",
+      "SELECT * FROM employees WHERE department_id = 10",
+      "SELECT * FROM employees WHERE salary > 50000",
+      "SELECT * FROM employees WHERE department_id = 10 ORDER BY salary DESC"
+    ],
+    "answer": 2,
+    "difficulty": "HARD",
+    "explanation": "B-tree composite indexes follow the leftmost prefix rule. A query filtering only on 'salary' skips the leading 'department_id' column and cannot utilize the index range scan.",
+    "error_tag": "composite_index_leftmost_prefix_violation"
+  }
+]

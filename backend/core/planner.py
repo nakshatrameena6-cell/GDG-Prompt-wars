@@ -26,7 +26,6 @@ def topological_sort_skills(
                 dependents[p].append(skill_id)
                 in_degree[skill_id] += 1
 
-    # Deterministic start queue
     queue = sorted([s for s, deg in in_degree.items() if deg == 0])
     ordered = []
 
@@ -40,12 +39,10 @@ def topological_sort_skills(
             if in_degree[dep] == 0:
                 next_candidates.append(dep)
 
-        # Insert sorted candidates into queue
         for cand in sorted(next_candidates):
             queue.append(cand)
         queue.sort()
 
-    # Append any remaining (in case of detached components or unhandled dependencies)
     for s in sorted(skills_subset):
         if s not in ordered:
             ordered.append(s)
@@ -63,11 +60,9 @@ def generate_roadmap(
     completed_skill_ids: Set[str]
 ) -> List[Dict[str, Any]]:
     """
-    Generates a sequenced roadmap of modules for a specific role and learner state.
-    Module statuses:
-      - 'done': Already completed by learner or effective level >= required level.
-      - 'active': Prerequisites are satisfied and module is ready to learn.
-      - 'locked': One or more prerequisite modules are not yet completed.
+    Generates an adaptive sequenced roadmap of modules for a role and learner state.
+    Prioritizes verified skill deficits, preserves completed progress, and strictly selects
+    from curated resources.json.
     """
     skills_map = {s["id"]: s for s in skills_catalog}
     prereq_map = {s["id"]: s.get("prerequisites", []) for s in skills_catalog}
@@ -95,12 +90,16 @@ def generate_roadmap(
         if eff >= req:
             done_skills.add(s_id)
 
-    # Second pass: construct module entries with status active/locked/done
+    # Second pass: construct module entries with status active/locked/done and adaptive priority
     roadmap_modules = []
     for order_idx, s_id in enumerate(ordered_skill_ids):
         req_level = required_skills[s_id]
         u = user_skills.get(s_id, {})
-        eff = calculate_effective_level(u.get("claimed_level", 0), u.get("verified_level"))
+        claimed_lvl = u.get("claimed_level", 0)
+        verified_lvl = u.get("verified_level")
+        eff = calculate_effective_level(claimed_lvl, verified_lvl)
+        gap = max(0, req_level - eff)
+
         s_info = skills_map.get(s_id, {})
         skill_name = s_info.get("name", s_id.replace("_", " ").title())
         prereqs = s_info.get("prerequisites", [])
@@ -126,7 +125,19 @@ def generate_roadmap(
 
             status = "active" if prereqs_met else "locked"
 
-        why_text = f"Master {skill_name} (Level {req_level}) to build essential proficiency for {role_title}."
+        # Adaptive priority and rationale
+        if verified_lvl is not None and verified_lvl < req_level:
+            priority = "HIGH"
+            why_text = f"CRITICAL DEFICIT: Verified at Level {verified_lvl} vs Required Level {req_level}. Immediate remediation required for {role_title}."
+        elif gap > 0:
+            priority = "MEDIUM"
+            why_text = f"Master {skill_name} (Level {req_level}) to build essential proficiency for {role_title}."
+        else:
+            priority = "LOW"
+            why_text = f"Core competency fulfilled for {role_title}."
+
+        matching_resources = resource_map.get(s_id, [])
+        recommended_resource = matching_resources[0] if matching_resources else None
 
         module = {
             "id": f"mod-{role_id}-{s_id}",
@@ -134,11 +145,16 @@ def generate_roadmap(
             "skill_name": skill_name,
             "category": s_info.get("category", "General"),
             "required_level": req_level,
+            "claimed_level": claimed_lvl,
+            "verified_level": verified_lvl,
             "effective_level": eff,
+            "gap": gap,
+            "priority": priority,
             "status": status,
             "prerequisites": prereqs,
             "why": why_text,
-            "resources": resource_map.get(s_id, []),
+            "resources": matching_resources,
+            "recommended_resource": recommended_resource,
             "order": order_idx + 1,
         }
         roadmap_modules.append(module)
@@ -150,11 +166,13 @@ def diff_goals(
     current_goal_skills: Dict[str, int],
     new_goal_skills: Dict[str, int],
     user_skills: Dict[str, Dict[str, Any]],
-    completed_skill_ids: Optional[Set[str]] = None
+    completed_skill_ids: Optional[Set[str]] = None,
+    current_role_title: str = "Previous Role",
+    new_role_title: str = "Target Role"
 ) -> Dict[str, Any]:
     """
-    Computes diff when previewing or changing target career goals.
-    Maintains completed progress for overlapping skills.
+    Computes intelligent diff when previewing or changing target career goals.
+    Explains the transition rationale and preserves achievements for overlapping skills.
     """
     cur_keys = set(current_goal_skills.keys())
     new_keys = set(new_goal_skills.keys())
@@ -166,11 +184,18 @@ def diff_goals(
     readiness_before = calculate_readiness(current_goal_skills, user_skills)
     readiness_after = calculate_readiness(new_goal_skills, user_skills)
 
+    explanation = (
+        f"Switching from {current_role_title} to {new_role_title}: "
+        f"Preserved {len(kept)} shared core competencies ({', '.join(kept[:3])}). "
+        f"Added {len(added)} new domain requirements ({', '.join(added[:3])}), and "
+        f"de-prioritized {len(removed)} role-specific skills."
+    )
+
     return {
         "kept_skills": kept,
         "added_skills": added,
         "removed_skills": removed,
         "readiness_before": readiness_before,
         "readiness_after": readiness_after,
+        "explanation": explanation,
     }
-

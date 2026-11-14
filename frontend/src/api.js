@@ -94,3 +94,33 @@ export async function resetDemo() {
   });
 }
 
+export async function fetchTechnicalQuestions(skill = null) {
+  const query = skill ? `?skill=${encodeURIComponent(skill)}` : '';
+  return request(`/assessment/questions${query}`);
+}
+
+export async function submitAssessment(responses, profileId = null) {
+  return request('/assessment/submit', {
+    method: 'POST',
+    body: JSON.stringify({ responses, profile_id: profileId }),
+  });
+}
+
+export async function fetchAgentTimeline(profileId = null) {
+  const query = profileId ? `?profile_id=${profileId}` : '';
+  return request(`/agents/timeline${query}`);
+}
+
+export async function sendMentorQuery(queryText, profileId = null) {
+  return request('/mentor/chat', {
+    method: 'POST',
+    body: JSON.stringify({ query: queryText, profile_id: profileId }),
+  });
+}
+
+export async function fetchProgress(profileId = null) {
+  const query = profileId ? `?profile_id=${profileId}` : '';
+  return request(`/progress${query}`);
+}
+
+

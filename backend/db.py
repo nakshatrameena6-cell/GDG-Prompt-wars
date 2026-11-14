@@ -54,6 +54,38 @@ def init_db():
             completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(profile_id, skill_id)
         );
+
+        CREATE TABLE IF NOT EXISTS assessment_attempts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            score INTEGER NOT NULL,
+            total_questions INTEGER NOT NULL,
+            accuracy_pct REAL NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS assessment_responses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            attempt_id INTEGER NOT NULL REFERENCES assessment_attempts(id) ON DELETE CASCADE,
+            profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            question_id TEXT NOT NULL,
+            skill_id TEXT NOT NULL,
+            selected_option INTEGER NOT NULL,
+            is_correct BOOLEAN NOT NULL,
+            response_time REAL NOT NULL,
+            difficulty TEXT NOT NULL,
+            error_tag TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS agent_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+            agent_name TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            details TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
         """)
         try:
             conn.execute("ALTER TABLE profiles ADD COLUMN interests TEXT DEFAULT ''")
@@ -66,6 +98,9 @@ def reset_db():
     """Resets database schema completely."""
     with get_connection() as conn:
         conn.executescript("""
+        DROP TABLE IF EXISTS agent_events;
+        DROP TABLE IF EXISTS assessment_responses;
+        DROP TABLE IF EXISTS assessment_attempts;
         DROP TABLE IF EXISTS completed_modules;
         DROP TABLE IF EXISTS skill_ratings;
         DROP TABLE IF EXISTS profiles;
@@ -198,6 +233,86 @@ def mark_skill_completed(profile_id: int, skill_id: str):
             VALUES (?, ?)
         """, (profile_id, skill_id))
         conn.commit()
+
+
+def record_assessment_attempt(
+    profile_id: int,
+    score: int,
+    total_questions: int,
+    accuracy_pct: float
+) -> int:
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO assessment_attempts (profile_id, score, total_questions, accuracy_pct)
+            VALUES (?, ?, ?, ?)
+        """, (profile_id, score, total_questions, accuracy_pct))
+        conn.commit()
+        return cursor.lastrowid
+
+
+def record_assessment_responses(
+    attempt_id: int,
+    profile_id: int,
+    responses: List[Dict[str, Any]]
+):
+    with get_connection() as conn:
+        for r in responses:
+            conn.execute("""
+                INSERT INTO assessment_responses (
+                    attempt_id, profile_id, question_id, skill_id,
+                    selected_option, is_correct, response_time, difficulty, error_tag
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                attempt_id,
+                profile_id,
+                r.get("question_id", ""),
+                r.get("skill_id", ""),
+                r.get("selected_option", -1),
+                1 if r.get("is_correct") else 0,
+                r.get("response_time", 0.0),
+                r.get("difficulty", "MEDIUM"),
+                r.get("error_tag", "")
+            ))
+        conn.commit()
+
+
+def get_assessment_history(profile_id: int) -> List[Dict[str, Any]]:
+    with get_connection() as conn:
+        rows = conn.execute("""
+            SELECT id, score, total_questions, accuracy_pct, created_at
+            FROM assessment_attempts
+            WHERE profile_id = ?
+            ORDER BY created_at DESC
+        """, (profile_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+def record_agent_event(
+    profile_id: int,
+    agent_name: str,
+    event_type: str,
+    details: str
+):
+    with get_connection() as conn:
+        conn.execute("""
+            INSERT INTO agent_events (profile_id, agent_name, event_type, details)
+            VALUES (?, ?, ?, ?)
+        """, (profile_id, agent_name, event_type, details))
+        conn.commit()
+
+
+def get_agent_events(profile_id: int, limit: int = 50) -> List[Dict[str, Any]]:
+    with get_connection() as conn:
+        rows = conn.execute("""
+            SELECT id, agent_name, event_type, details, created_at
+            FROM agent_events
+            WHERE profile_id = ?
+            ORDER BY id DESC
+            LIMIT ?
+        """, (profile_id, limit)).fetchall()
+        return [dict(r) for r in rows]
+
 
 
 def count_db_rows() -> Dict[str, int]:

@@ -26,3 +26,22 @@ class GoalRequest(BaseModel):
 
 class CompleteModuleRequest(BaseModel):
     profile_id: Optional[int] = None
+
+
+class AssessmentAnswerItem(BaseModel):
+    question_id: str
+    skill_id: str
+    selected_option: int
+    response_time: float = 10.0
+    difficulty: str = "MEDIUM"
+    error_tag: Optional[str] = None
+
+
+class AssessmentSubmitRequest(BaseModel):
+    profile_id: Optional[int] = None
+    responses: List[AssessmentAnswerItem]
+
+
+class MentorQueryRequest(BaseModel):
+    profile_id: Optional[int] = None
+    query: str

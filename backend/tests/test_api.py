@@ -31,7 +31,7 @@ def test_catalog_endpoint():
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "success"
-    assert len(data["roles"]) == 3
+    assert len(data["roles"]) >= 3
     assert len(data["skills"]) == 15
     assert len(data["resources"]) >= 30
 

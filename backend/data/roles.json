@@ -38,6 +38,21 @@
       "typescript": 3,
       "git": 2
     }
+  },
+  {
+    "id": "ml_engineer",
+    "title": "ML Engineer",
+    "description": "Designs and deploys scalable machine learning pipelines, predictive models, and data backends.",
+    "required_skills": {
+      "python": 4,
+      "sql": 3,
+      "pandas": 3,
+      "data_analysis": 3,
+      "data_visualization": 3,
+      "machine_learning": 4,
+      "docker": 2,
+      "git": 2
+    }
   }
 ]
 
