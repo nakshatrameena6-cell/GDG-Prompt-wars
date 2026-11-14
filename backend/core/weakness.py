@@ -1,11 +1,48 @@
 """
 backend/core/weakness.py - Deterministic diagnostic heuristics and verified skill calculation.
-Pure functions with zero I/O and zero LLM calls.
+
+Provides pure functions for root-cause analysis, time-budget error diagnosis, and
+evidence-backed verified skill rating with zero I/O and zero LLM calls.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TypedDict
 
+# Diagnostic heuristic thresholds
 FAST_THRESHOLD_SECONDS = 8.5
+
+# Diagnostic signal types
+SIGNAL_DEMONSTRATED_PROFICIENCY = "demonstrated_proficiency"
+SIGNAL_CARELESS_ERROR = "careless_error"
+SIGNAL_CONCEPTUAL_WEAKNESS = "conceptual_weakness"
+SIGNAL_PERSISTENT_GAP = "persistent_knowledge_gap"
+
+
+class DiagnosticSignal(TypedDict, total=False):
+    """Represents a discrete diagnostic signal detected during technical assessment."""
+    type: str
+    skill_id: str
+    difficulty: str
+    time_taken: float
+    error_tag: str
+    heuristic: str
+    error_count: int
+
+
+class SkillDiagnostics(TypedDict):
+    """Aggregated response statistics for a single skill."""
+    total: int
+    correct: int
+    errors: List[Dict[str, Any]]
+    careless_errors: int
+    conceptual_errors: int
+    hard_correct: int
+
+
+class WeaknessAnalysisReport(TypedDict):
+    """Full diagnostic weakness analysis report across all evaluated responses."""
+    signals: List[Dict[str, Any]]
+    skill_stats: Dict[str, Dict[str, Any]]
+    verified_levels: Dict[str, Optional[int]]
 
 
 def calculate_verified_skill_level(
@@ -14,10 +51,17 @@ def calculate_verified_skill_level(
     """
     Transparent scoring rule for verified skill level:
     - 0 questions attempted -> None (Unverified)
-    - 100% correct (with HARD passed) -> Level 4 (or 5)
-    - 66% - 99% correct -> Level 3
-    - 33% - 65% correct -> Level 2
-    - < 33% correct -> Level 1
+    - 100% correct (with HARD passed) -> Level 5 (Mastery)
+    - 100% correct (without HARD) -> Level 4 (Proficient)
+    - 65% - 99% correct -> Level 3 (Working Competency)
+    - 30% - 64% correct -> Level 2 (Novice)
+    - < 30% correct -> Level 1 (Foundational Deficit)
+
+    Args:
+        skill_responses: List of recorded response telemetry for a skill.
+
+    Returns:
+        Optional[int]: Verified skill rating (1-5), or None if unassessed.
     """
     if not skill_responses:
         return None
@@ -44,17 +88,24 @@ def calculate_verified_skill_level(
 def analyze_weakness_heuristics(
     responses: List[Dict[str, Any]],
     skills_map: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+) -> WeaknessAnalysisReport:
     """
-    Extracts root-cause-lite diagnostic signals from assessment responses:
-    - Fast (< 8.5s) + incorrect -> possible careless error
-    - Slow (>= 8.5s) + incorrect -> possible conceptual weakness
+    Extracts root-cause diagnostic signals from assessment responses:
+    - Fast (< 8.5s) + incorrect -> possible careless error / hasty execution
+    - Slow (>= 8.5s) + incorrect -> conceptual weakness requiring foundational study
     - Repeated errors on same skill -> persistent knowledge gap
-    - Correct answers on HARD difficulty -> demonstrated proficiency
+    - Correct answers on HARD difficulty -> demonstrated high-tier proficiency
+
+    Args:
+        responses: Array of submitted assessment question responses with telemetry.
+        skills_map: Optional mapping of skill metadata.
+
+    Returns:
+        WeaknessAnalysisReport: Detected diagnostic signals, per-skill stats, and verified levels.
     """
     skills_map = skills_map or {}
     skill_stats: Dict[str, Dict[str, Any]] = {}
-    diagnostic_signals = []
+    diagnostic_signals: List[Dict[str, Any]] = []
 
     for r in responses:
         skill_id = r.get("skill_id", "general")
@@ -82,7 +133,7 @@ def analyze_weakness_heuristics(
             if difficulty == "HARD":
                 stats["hard_correct"] += 1
                 diagnostic_signals.append({
-                    "type": "demonstrated_proficiency",
+                    "type": SIGNAL_DEMONSTRATED_PROFICIENCY,
                     "skill_id": skill_id,
                     "difficulty": difficulty,
                     "heuristic": "Strong demonstrated proficiency under advanced problem constraints.",
@@ -97,7 +148,7 @@ def analyze_weakness_heuristics(
             if time_taken < FAST_THRESHOLD_SECONDS:
                 stats["careless_errors"] += 1
                 diagnostic_signals.append({
-                    "type": "careless_error",
+                    "type": SIGNAL_CARELESS_ERROR,
                     "skill_id": skill_id,
                     "difficulty": difficulty,
                     "time_taken": time_taken,
@@ -107,7 +158,7 @@ def analyze_weakness_heuristics(
             else:
                 stats["conceptual_errors"] += 1
                 diagnostic_signals.append({
-                    "type": "conceptual_weakness",
+                    "type": SIGNAL_CONCEPTUAL_WEAKNESS,
                     "skill_id": skill_id,
                     "difficulty": difficulty,
                     "time_taken": time_taken,
@@ -119,14 +170,14 @@ def analyze_weakness_heuristics(
     for s_id, s_info in skill_stats.items():
         if len(s_info["errors"]) >= 2:
             diagnostic_signals.append({
-                "type": "persistent_knowledge_gap",
+                "type": SIGNAL_PERSISTENT_GAP,
                 "skill_id": s_id,
                 "error_count": len(s_info["errors"]),
                 "heuristic": f"Repeated incorrect answers ({len(s_info['errors'])} errors) in {s_id}. Indicates persistent core competency deficit.",
             })
 
     # Summary by skill
-    verified_levels = {}
+    verified_levels: Dict[str, Optional[int]] = {}
     for s_id, s_info in skill_stats.items():
         skill_resps = [r for r in responses if r.get("skill_id") == s_id]
         verified_levels[s_id] = calculate_verified_skill_level(skill_resps)

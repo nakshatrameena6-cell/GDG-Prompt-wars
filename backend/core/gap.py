@@ -1,16 +1,48 @@
 """
 backend/core/gap.py - Pure functions for skill gap analysis and telemetry.
-Zero I/O.
+
+This module provides deterministic mathematical functions for evaluating student skill
+readiness, effective competency levels, and verification coverage without any network I/O
+or external LLM dependencies.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, TypedDict
+
+
+class GapItem(TypedDict):
+    """Represents an itemized skill evaluation against a career requirement."""
+    skill_id: str
+    skill_name: str
+    category: str
+    claimed: int
+    verified: Optional[int]
+    effective: int
+    required: int
+    gap: int
+    fulfilled: bool
+
+
+class GapReport(TypedDict):
+    """Aggregate skill gap and readiness evaluation report."""
+    items: List[GapItem]
+    gap_skills: List[str]
+    readiness: float
+    verification_coverage: float
 
 
 def calculate_effective_level(claimed_level: int, verified_level: Optional[int] = None) -> int:
     """
     Calculates the student's effective skill level.
-    If a verified assessment score exists, it takes precedence.
-    Otherwise, the claimed rating is used.
+
+    The verified assessment score takes precedence when present; otherwise, the claimed
+    self-rating is utilized. Clamps unrated or missing values to 0.
+
+    Args:
+        claimed_level: Self-reported skill level (1-5, or 0 if unrated).
+        verified_level: Optional objective assessment score (1-5).
+
+    Returns:
+        int: Effective competency level (0-5).
     """
     if verified_level is not None:
         return verified_level
@@ -19,8 +51,14 @@ def calculate_effective_level(claimed_level: int, verified_level: Optional[int] 
 
 def calculate_gap(effective_level: int, required_level: int) -> int:
     """
-    Calculates the gap between effective level and required level.
-    Returns 0 if effective level meets or exceeds requirement.
+    Calculates the numeric deficit between effective level and target requirement.
+
+    Args:
+        effective_level: Current effective skill level.
+        required_level: Minimum required skill level for the target role.
+
+    Returns:
+        int: Deficit amount, or 0 if effective level meets or exceeds requirement.
     """
     return max(0, required_level - effective_level)
 
@@ -31,8 +69,16 @@ def calculate_readiness(
 ) -> float:
     """
     Computes overall readiness percentage against a target role requirement.
-    Weighted by required levels: sum(min(effective, required)) / sum(required) * 100.
-    Clamped to 0.0 - 100.0%.
+
+    Weighted mathematically by required levels:
+        readiness % = (sum(min(effective, required)) / sum(required)) * 100.0
+
+    Args:
+        required_skills: Mapping of skill IDs to required mastery levels.
+        user_skills: Mapping of skill IDs to student skill profiles.
+
+    Returns:
+        float: Rounded readiness score clamped between 0.0 and 100.0%.
     """
     if not required_skills:
         return 100.0
@@ -58,7 +104,14 @@ def calculate_verification_coverage(
     user_skills: Dict[str, Dict[str, Any]]
 ) -> float:
     """
-    Calculates the percentage of role-required skills that have a verified rating.
+    Calculates the percentage of role-required skills verified via objective assessment.
+
+    Args:
+        required_skills: Mapping of skill IDs to required mastery levels.
+        user_skills: Mapping of skill IDs to student skill profiles.
+
+    Returns:
+        float: Verified skill coverage percentage (0.0 to 100.0%).
     """
     if not required_skills:
         return 0.0
@@ -77,14 +130,21 @@ def analyze_gaps(
     required_skills: Dict[str, int],
     user_skills: Dict[str, Dict[str, Any]],
     skills_catalog: Optional[List[Dict[str, Any]]] = None
-) -> Dict[str, Any]:
+) -> GapReport:
     """
     Produces full gap analysis report across all role-required skills.
-    Returns itemized breakdown, gap list, readiness %, and verification coverage.
+
+    Args:
+        required_skills: Mapping of skill IDs to required mastery levels.
+        user_skills: Mapping of skill IDs to student skill profiles.
+        skills_catalog: Optional catalogue metadata for human-readable skill names.
+
+    Returns:
+        GapReport: Itemized breakdown, outstanding gap skills, readiness %, and verification coverage.
     """
     skills_map = {s["id"]: s for s in (skills_catalog or [])}
-    items = []
-    gap_skills = []
+    items: List[GapItem] = []
+    gap_skills: List[str] = []
 
     for skill_id, req_level in required_skills.items():
         u_skill = user_skills.get(skill_id, {})
@@ -96,7 +156,7 @@ def analyze_gaps(
         skill_info = skills_map.get(skill_id, {})
         skill_name = skill_info.get("name", skill_id.replace("_", " ").title())
 
-        item = {
+        item: GapItem = {
             "skill_id": skill_id,
             "skill_name": skill_name,
             "category": skill_info.get("category", "General"),
@@ -120,4 +180,3 @@ def analyze_gaps(
         "readiness": readiness,
         "verification_coverage": coverage,
     }
-

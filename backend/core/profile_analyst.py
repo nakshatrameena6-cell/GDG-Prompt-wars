@@ -1,17 +1,43 @@
 """
 backend/core/profile_analyst.py - Deterministic Profile Analyst foundation.
-Pure functions with zero I/O and zero LLM calls.
-Easily swappable with Gemini-powered agent in Phase 2/3.
+
+Pure functions for synthesizing learner interests, self-reported strengths, and
+primary skill gaps into an objective observation summary without hallucination or LLM bias.
+Zero I/O.
 """
 
-from typing import Dict, Any, List, Optional
-from backend.core.gap import calculate_effective_level
+from typing import Dict, Any, List, Optional, TypedDict
 
-DEFAULT_ROLE_INTERESTS = {
+DEFAULT_ROLE_INTERESTS: Dict[str, str] = {
     "full_stack_developer": "Full-stack web architecture, API engineering, relational databases",
     "data_analyst": "Data analysis, tabular data manipulation, exploratory visualization, SQL",
     "frontend_developer": "Modern UI/UX components, client-side state management, responsive design",
 }
+
+
+class ClaimedStrength(TypedDict):
+    """Represents a self-reported or high-competency skill area."""
+    skill_id: str
+    skill_name: str
+    claimed_level: int
+
+
+class SkillGapSummary(TypedDict):
+    """Represents a prioritized skill deficit requiring remediation."""
+    skill_id: str
+    skill_name: str
+    gap: int
+    required_level: int
+    claimed_level: int
+
+
+class ProfileSummaryReport(TypedDict):
+    """Structured analytical summary of learner capabilities and focus areas."""
+    interests: str
+    claimed_strengths: List[ClaimedStrength]
+    selected_career: Dict[str, str]
+    main_skill_gaps: List[SkillGapSummary]
+    observation: str
 
 
 def generate_profile_summary(
@@ -20,10 +46,22 @@ def generate_profile_summary(
     user_skills: Dict[str, Dict[str, Any]],
     gap_report: Dict[str, Any],
     skills_catalog: List[Dict[str, Any]]
-) -> Dict[str, Any]:
+) -> ProfileSummaryReport:
     """
     Generates a deterministic profile summary based strictly on existing learner data.
-    Does not fabricate assessment results, verified skill levels, or LLM output.
+
+    Synthesizes declared career interests, claimed proficiencies, and immediate role deficits
+    into an actionable diagnostic observation.
+
+    Args:
+        profile: Student profile metadata (name, interests, etc.).
+        role: Target career role metadata (id, title, etc.).
+        user_skills: Current student skill state.
+        gap_report: Output from gap analysis containing itemized deficit calculations.
+        skills_catalog: Master skills catalogue.
+
+    Returns:
+        ProfileSummaryReport: Synthesized strengths, prioritized gaps, and objective observation text.
     """
     student_name = profile.get("name") or "Student"
     role_id = role.get("id", "")
@@ -40,7 +78,7 @@ def generate_profile_summary(
         )
 
     # 2. Claimed strengths (claimed_level >= 3, or highest claimed skills)
-    strengths = []
+    strengths: List[ClaimedStrength] = []
     for s_id, u_data in user_skills.items():
         claimed = u_data.get("claimed_level", 0)
         if claimed >= 3:
@@ -60,7 +98,7 @@ def generate_profile_summary(
     ]
     gap_items.sort(key=lambda x: x["gap"], reverse=True)
 
-    main_skill_gaps = [
+    main_skill_gaps: List[SkillGapSummary] = [
         {
             "skill_id": item["skill_id"],
             "skill_name": item["skill_name"],
@@ -107,4 +145,3 @@ def generate_profile_summary(
         "main_skill_gaps": main_skill_gaps,
         "observation": obs,
     }
-
