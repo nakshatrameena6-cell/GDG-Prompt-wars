@@ -94,3 +94,4 @@ def test_analyze_gaps_sample_student():
 
     assert 20 <= result["readiness"] <= 60
     assert result["verification_coverage"] == 0.0
+

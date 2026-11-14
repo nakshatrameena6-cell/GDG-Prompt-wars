@@ -95,3 +95,4 @@ def test_resources_urls_and_levels(resources_data, skills_data):
         assert r["url"].startswith("https://"), f"Resource '{r['id']}' URL must start with https://, got '{r['url']}'"
         assert isinstance(r["level"], int), f"Resource '{r['id']}' level must be an int, got {type(r['level'])}"
         assert 1 <= r["level"] <= 5, f"Resource '{r['id']}' level {r['level']} is not between 1 and 5"
+

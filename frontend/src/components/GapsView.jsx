@@ -153,3 +153,4 @@ export default function GapsView({ state }) {
     </div>
   );
 }
+

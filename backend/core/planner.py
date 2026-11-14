@@ -173,3 +173,4 @@ def diff_goals(
         "readiness_before": readiness_before,
         "readiness_after": readiness_after,
     }
+

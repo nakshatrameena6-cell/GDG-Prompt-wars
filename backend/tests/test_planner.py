@@ -136,3 +136,4 @@ def test_diff_goals():
     assert set(diff["removed_skills"]) == {"javascript", "react", "nodejs", "rest_api", "html_css"}
     assert diff["readiness_before"] == 36.4
     assert diff["readiness_after"] == 35.3
+

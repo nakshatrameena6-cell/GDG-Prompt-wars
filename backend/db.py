@@ -218,3 +218,4 @@ def seed_sample_student() -> Dict[str, Any]:
     set_skill_rating(p_id, "html_css", claimed_level=2)
 
     return get_profile(p_id)
+

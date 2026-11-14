@@ -120,3 +120,4 @@ def analyze_gaps(
         "readiness": readiness,
         "verification_coverage": coverage,
     }
+
